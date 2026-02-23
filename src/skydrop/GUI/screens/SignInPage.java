@@ -1,10 +1,10 @@
-package skydrop.screens;
+package skydrop.GUI.screens;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
-import skydrop.components.RoundedButton;
-import skydrop.components.RoundedInputField;
+import skydrop.GUI.components.RoundedButton;
+import skydrop.GUI.components.RoundedInputField;
 
 public class SignInPage extends JFrame {
 

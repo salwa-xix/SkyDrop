@@ -1,5 +1,5 @@
 package skydrop.app;
-import skydrop.screens.SplashScreen;
+import skydrop.GUI.screens.SplashScreen;
 import javax.swing.*;
 
 public class Main {

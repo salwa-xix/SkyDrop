@@ -1,9 +1,9 @@
-package skydrop.screens;
+package skydrop.GUI.screens;
 
 import javax.swing.*;
 import java.awt.*;
 
-import skydrop.components.RoundedButton;
+import skydrop.GUI.components.RoundedButton;
 
 public class SplashScreen extends JFrame {
 
