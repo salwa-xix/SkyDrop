@@ -3,7 +3,6 @@ package skydrop.screens;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
-
 import skydrop.components.RoundedButton;
 import skydrop.components.RoundedInputField;
 
