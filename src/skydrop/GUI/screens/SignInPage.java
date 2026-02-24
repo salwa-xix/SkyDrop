@@ -3,6 +3,7 @@ package skydrop.GUI.screens;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
+
 import skydrop.GUI.components.RoundedButton;
 import skydrop.GUI.components.RoundedInputField;
 
@@ -147,8 +148,8 @@ public class SignInPage extends JFrame {
         signUpLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                new SignUpScreen(); // open sign up page
-                dispose();          // close sign in page
+                new SignUpScreen();
+                dispose();
             }
         });
 
@@ -169,11 +170,29 @@ public class SignInPage extends JFrame {
                 return;
             }
 
-            JOptionPane.showMessageDialog(this,
-                    "Signed in successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
+
+
+
+
+
+
+            //-------------------------------------
+            //  GO TO ORDER TEST SCREEN (after sign in)
+            try {
+                new OrderTestScreen();
+                dispose();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Order screen failed to open:\n"
+                                + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
+
+
+
 
         getRootPane().setDefaultButton(signInButton);
 
@@ -185,6 +204,4 @@ public class SignInPage extends JFrame {
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
         });
     }
-
-
 }

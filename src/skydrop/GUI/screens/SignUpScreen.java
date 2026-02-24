@@ -6,6 +6,7 @@ import java.awt.KeyboardFocusManager;
 
 import skydrop.GUI.components.RoundedButton;
 import skydrop.GUI.components.RoundedInputField;
+
 public class SignUpScreen extends JFrame {
 
     private static final int W = 375;
@@ -53,7 +54,7 @@ public class SignUpScreen extends JFrame {
         bgImage = new ImageIcon(getClass().getResource("/Images/wallpaper.png")).getImage();
         originalLogo = new ImageIcon(getClass().getResource("/Images/skydrop logo.png")).getImage();
 
-        // ===== Logo (fixed) =====
+        // ===== Logo =====
         JLabel logoLabel = new JLabel();
         logoLabel.setSize(logoSize, logoSize);
         logoLabel.setLocation((W - logoSize) / 2, logoYTop);
@@ -67,7 +68,6 @@ public class SignUpScreen extends JFrame {
         int fieldW = W - 80;
         int fieldH = 50;
 
-        // Move up/down from here
         int startY = logoYTop + logoSize + 60;
 
         // ===== Fields =====
@@ -79,7 +79,7 @@ public class SignUpScreen extends JFrame {
         phoneField.setBounds(formX, startY + 70, fieldW, fieldH);
         root.add(phoneField);
 
-        // ===== District dropdown (with placeholder first item) =====
+        // ===== District dropdown =====
         String[] jeddahDistricts = {
                 "Your District",
                 "Al Rawdah",
@@ -137,7 +137,7 @@ public class SignUpScreen extends JFrame {
             }
         };
 
-        // Listen for typing (fields)
+        // Listen for typing
         javax.swing.event.DocumentListener dl = new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
@@ -174,7 +174,7 @@ public class SignUpScreen extends JFrame {
             }
         });
 
-        // ===== Sign Up action (includes district validation) =====
+        // ===== Sign Up action =====
         signUpButton.addActionListener(e -> {
 
             String name = nameField.getText().trim();
@@ -196,11 +196,24 @@ public class SignUpScreen extends JFrame {
                 return;
             }
 
-            JOptionPane.showMessageDialog(this,
-                    "Signed up successfully!\nDistrict: " + district,
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
+
+//-------------------------------------
+            // GO TO ORDER TEST SCREEN (after sign up)
+            try {
+                new OrderTestScreen();
+                dispose();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Order screen failed to open:\n"
+                                + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
+
+
+
 
         getRootPane().setDefaultButton(signUpButton);
 
@@ -212,7 +225,6 @@ public class SignUpScreen extends JFrame {
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
         });
     }
-
 
     // ===== Rounded ComboBox (same style as fields) =====
     static class RoundedComboBox extends JComboBox<String> {
