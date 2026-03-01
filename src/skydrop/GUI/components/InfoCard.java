@@ -9,23 +9,33 @@ public class InfoCard extends RoundedCard {
         super(radius);
     }
 
+    // Title (default LEFT)
     public void addTitle(String text, int x, int y, int w, int h) {
+        addTitle(text, x, y, w, h, SwingConstants.LEFT);
+    }
+
+    // Title (custom alignment)
+    public void addTitle(String text, int x, int y, int w, int h, int align) {
         add(Label.createLabel(
-                text,
-                x, y, w, h,
+                text, x, y, w, h,
                 new Font("SansSerif", Font.BOLD, 16),
                 Color.BLACK,
-                SwingConstants.LEFT
+                align
         ));
     }
 
+    // Subtitle (default LEFT)
     public void addSubtitle(String text, int x, int y, int w, int h) {
+        addSubtitle(text, x, y, w, h, SwingConstants.LEFT);
+    }
+
+    // Subtitle (default LEFT)
+    public void addSubtitle(String text, int x, int y, int w, int h, int align) {
         add(Label.createLabel(
-                text,
-                x, y, w, h,
+                text, x, y, w, h,
                 new Font("SansSerif", Font.PLAIN, 12),
                 Color.DARK_GRAY,
-                SwingConstants.LEFT
+                align
         ));
     }
 

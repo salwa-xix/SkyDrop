@@ -67,7 +67,7 @@ public class DashboardScreen extends JFrame {
             root.add(card);
         }
 
-// Create the "Report" action button
+    // Create the "Report" action button
         RoundedButton reportButton = new RoundedButton("Report", 18);
         reportButton.setBounds((W - 160) / 2, H - 95, 160, 48); // positioning
 
@@ -75,7 +75,7 @@ public class DashboardScreen extends JFrame {
         reportButton.setBackground(Color.WHITE);
         reportButton.setForeground(Color.BLACK);
 
-// Hover effect
+    // Hover effect
         reportButton.enableHover(Color.WHITE, Color.decode("#0092D9"));
         reportButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override public void mouseEntered(java.awt.event.MouseEvent e) {
