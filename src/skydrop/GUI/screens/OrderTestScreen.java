@@ -1,198 +1,137 @@
 package skydrop.GUI.screens;
 
+import skydrop.GUI.components.BaseScreen;
+import skydrop.GUI.components.InfoCard;
+import skydrop.GUI.components.RoundedButton;
+
 import javax.swing.*;
 import java.awt.*;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
-import skydrop.GUI.components.RoundedButton;
+import static skydrop.GUI.components.Label.createLabel;
 
 public class OrderTestScreen extends JFrame {
 
-    // screen size like mobile
-    private static final int W = 375;
-    private static final int H = 812;
+    // Screen size
+    private static final int W = 375, H = 812;
 
-    // background and logo images
-    private Image bgImage;
-    private Image originalLogo;
+    // Button colors
+    private static final Color BTN_NORMAL = Color.WHITE;
+    private static final Color BTN_HOVER  = Color.decode("#0092D9");
 
-    // fallback color if background image not found
-    private final Color bgFallback = Color.decode("#262525");
-
-    // local demo data for restaurants and cafes
-    private final Map<String, String[]> restaurants = new LinkedHashMap<>();
-    private final Map<String, String[]> cafes = new LinkedHashMap<>();
+    // Demo data (type -> places -> items)
+    private final Map<String, String[]> restaurants = new LinkedHashMap<>() {{
+        put("Al Baik", new String[]{"Broast", "Spicy Broast", "Nuggets"});
+        put("Kudu", new String[]{"Chicken Sandwich", "Burger", "Fries"});
+    }};
+    private final Map<String, String[]> cafes = new LinkedHashMap<>() {{
+        put("Barn's", new String[]{"Latte", "Cappuccino"});
+        put("Starbucks", new String[]{"Americano", "Matcha"});
+    }};
 
     public OrderTestScreen() {
 
-        // frame basic setup
+        // Frame setup
         setTitle("SkyDrop - Create Order");
         setSize(W, H);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        // fill demo data
-        seedData();
-
-        // root panel draws background
-        JPanel root = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-
-                if (bgImage != null) {
-                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-                } else {
-                    g2.setColor(bgFallback);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
-                g2.dispose();
-            }
-        };
+        // Root screen (background + logo)
+        BaseScreen root = new BaseScreen(getClass());
         setContentPane(root);
 
-        // load images from resources
-        bgImage = loadImage("/Images/wallpaper.png");
-        originalLogo = loadImage("/Images/skydrop logo.png");
+        // Title texts
+        root.add(createLabel("Create Order", 0, 175, W, 30,
+                new Font("SansSerif", Font.BOLD, 20),
+                Color.WHITE, SwingConstants.CENTER));
 
-        // logo at the top
-        int logoSize = 170;
-        int logoYTop = 35;
+        root.add(createLabel("Choose type, place, then item", 0, 205, W, 18,
+                new Font("SansSerif", Font.PLAIN, 12),
+                new Color(255, 255, 255, 180),
+                SwingConstants.CENTER));
 
-        JLabel logoLabel = new JLabel();
-        logoLabel.setBounds((W - logoSize) / 2, logoYTop, logoSize, logoSize);
+        // Layout values
+        int cw = 320, ch = 78, x = (W - cw) / 2, y = 250, g = 14;
 
-        if (originalLogo != null) {
-            logoLabel.setIcon(new ImageIcon(
-                    originalLogo.getScaledInstance(logoSize, logoSize, Image.SCALE_SMOOTH)
-            ));
-        }
-        root.add(logoLabel);
+        // Dropdowns (place/item start disabled)
+        JComboBox<String> type  = box("Choose place type", "Restaurant", "Cafe");
+        JComboBox<String> place = box("Choose place"); place.setEnabled(false);
+        JComboBox<String> item  = box("Choose item");  item.setEnabled(false);
 
-        // title card panel
-        int titleY = logoYTop + logoSize + 45;
+        // Cards that hold dropdowns
+        root.add(card("Type",  x, y, cw, ch, type));
+        root.add(card("Place", x, y + (ch + g), cw, ch, place));
+        root.add(card("Item",  x, y + 2 * (ch + g), cw, ch, item));
 
-        JPanel titleCard = new RoundedGlassPanel(20, new Color(0, 0, 0, 130));
-        titleCard.setBounds(30, titleY, W - 60, 90);
-        titleCard.setLayout(null);
-        root.add(titleCard);
+        // Submit button (disabled until all selections are done)
+        RoundedButton submit = new RoundedButton("Submit", 18);
+        submit.setBounds((W - 160) / 2, H - 95, 160, 48);
+        submit.setFont(new Font("SansSerif", Font.BOLD, 14));
+        submit.setBackground(BTN_NORMAL);
+        submit.setForeground(Color.BLACK);
+        submit.setEnabled(false);
 
-        // title text
-        JLabel title = new JLabel("Create Order", SwingConstants.CENTER);
-        title.setBounds(0, 15, W - 60, 30);
-        title.setFont(new Font("SansSerif", Font.BOLD, 26));
-        title.setForeground(Color.WHITE);
-        titleCard.add(title);
-
-        // subtitle text
-        JLabel subtitle = new JLabel("Choose type, place, then item", SwingConstants.CENTER);
-        subtitle.setBounds(0, 50, W - 60, 18);
-        subtitle.setForeground(new Color(255, 255, 255, 180));
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        titleCard.add(subtitle);
-
-        // form layout values
-        int formX = 40;
-        int fieldW = W - 80;
-        int fieldH = 55;
-        int formY = titleY + 125;
-
-        // dropdown for type
-        RoundedComboBox typeBox = new RoundedComboBox(
-                new String[]{"Choose place type", "Restaurant", "Cafe"}, 18
-        );
-        typeBox.setBounds(formX, formY, fieldW, fieldH);
-        root.add(typeBox);
-
-        // dropdown for place disabled until type chosen
-        RoundedComboBox placeBox = new RoundedComboBox(
-                new String[]{"Choose place"}, 18
-        );
-        placeBox.setBounds(formX, formY + 80, fieldW, fieldH);
-        placeBox.setEnabled(false);
-        root.add(placeBox);
-
-        // dropdown for item disabled until place chosen
-        RoundedComboBox itemBox = new RoundedComboBox(
-                new String[]{"Choose item"}, 18
-        );
-        itemBox.setBounds(formX, formY + 160, fieldW, fieldH);
-        itemBox.setEnabled(false);
-        root.add(itemBox);
-
-        // submit button
-        RoundedButton submitBtn = new RoundedButton("Submit", 18);
-        submitBtn.setBounds((W - fieldW / 2) / 2, formY + 260, fieldW / 2, 55);
-        submitBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        submitBtn.setBackground(Color.WHITE);
-        submitBtn.setForeground(Color.BLACK);
-        submitBtn.setFocusPainted(false);
-        root.add(submitBtn);
-
-        // simple pressed effect colors
-        Color normal = Color.WHITE;
-        Color pressed = new Color(120, 190, 255);
-
-        // change color when button is pressed
-        submitBtn.getModel().addChangeListener(e -> {
-            ButtonModel model = submitBtn.getModel();
-            if (model.isPressed()) {
-                submitBtn.setBackground(pressed);
-            } else {
-                submitBtn.setBackground(normal);
+        // Hover effect (only when enabled)
+        submit.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e){
+                if (!submit.isEnabled()) return;
+                submit.setBackground(BTN_HOVER);
+                submit.setForeground(Color.WHITE);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e){
+                if (!submit.isEnabled()) return;
+                submit.setBackground(BTN_NORMAL);
+                submit.setForeground(Color.BLACK);
             }
         });
 
-        // when type changes we reset and fill places
-        typeBox.addActionListener(e -> {
-            placeBox.setModel(new DefaultComboBoxModel<>(new String[]{"Choose place"}));
-            itemBox.setModel(new DefaultComboBoxModel<>(new String[]{"Choose item"}));
-            placeBox.setEnabled(false);
-            itemBox.setEnabled(false);
+        root.add(submit);
 
-            String type = (String) typeBox.getSelectedItem();
-            if ("Restaurant".equals(type)) {
-                placeBox.setModel(new DefaultComboBoxModel<>(buildPlacesList(restaurants)));
-                placeBox.setEnabled(true);
-            }
-            if ("Cafe".equals(type)) {
-                placeBox.setModel(new DefaultComboBoxModel<>(buildPlacesList(cafes)));
-                placeBox.setEnabled(true);
-            }
+        // When type changes: reset place + item, then enable place
+        type.addActionListener(e -> {
+            set(place, "Choose place"); place.setEnabled(false);
+            set(item,  "Choose item");  item.setEnabled(false);
 
+            String t = (String) type.getSelectedItem();
+            if ("Restaurant".equals(t)) { set(place, list(restaurants)); place.setEnabled(true); }
+            else if ("Cafe".equals(t))  { set(place, list(cafes));       place.setEnabled(true); }
+
+            // Update submit button state
+            updateSubmit(submit, type, place, item);
         });
 
-        // when place changes we fill items for that place
-        placeBox.addActionListener(e -> {
-            itemBox.setModel(new DefaultComboBoxModel<>(new String[]{"Choose item"}));
-            itemBox.setEnabled(false);
+        // When place changes: reset item, then enable item
+        place.addActionListener(e -> {
+            set(item, "Choose item"); item.setEnabled(false);
 
-            String type = (String) typeBox.getSelectedItem();
-            String place = (String) placeBox.getSelectedItem();
-            if (place == null || place.startsWith("Choose")) return;
-
-            String[] items =
-                    "Restaurant".equals(type) ? restaurants.get(place) : cafes.get(place);
-
-            if (items != null) {
-                itemBox.setModel(new DefaultComboBoxModel<>(buildItemsList(items)));
-                itemBox.setEnabled(true);
+            String t = (String) type.getSelectedItem();
+            String p = (String) place.getSelectedItem();
+            if (p == null || p.startsWith("Choose")) {
+                updateSubmit(submit, type, place, item);
+                return;
             }
 
+            String[] items = "Restaurant".equals(t) ? restaurants.get(p) : cafes.get(p);
+            if (items != null) { set(item, list(items)); item.setEnabled(true); }
+
+            // Update submit button state
+            updateSubmit(submit, type, place, item);
         });
 
-        // submit creates an order and opens status screen
-        submitBtn.addActionListener(e -> {
-            String type = (String) typeBox.getSelectedItem();
-            String place = (String) placeBox.getSelectedItem();
-            String item = (String) itemBox.getSelectedItem();
+        // When item changes: enable submit if everything is selected
+        item.addActionListener(e -> updateSubmit(submit, type, place, item));
 
-            if (type.startsWith("Choose") || place.startsWith("Choose") || item.startsWith("Choose")) {
+        // Submit: validate selections then open status screen
+        submit.addActionListener(e -> {
+            String t  = (String) type.getSelectedItem();
+            String p  = (String) place.getSelectedItem();
+            String it = (String) item.getSelectedItem();
+
+            if (bad(t) || bad(p) || bad(it)) {
                 JOptionPane.showMessageDialog(this,
                         "Please complete: type, place, and item.",
                         "Missing Info",
@@ -200,94 +139,76 @@ public class OrderTestScreen extends JFrame {
                 return;
             }
 
-
-            new OrderStatusScreen(generateOrderId(), type, place, item);
+            // Open next screen with a demo order id
+            new OrderStatusScreen(100 + new Random().nextInt(900), t, p, it);
             dispose();
         });
 
         setVisible(true);
     }
 
-    // fill sample data for demo
-    private void seedData() {
-        restaurants.put("Al Baik", new String[]{"Broast", "Spicy Broast", "Nuggets"});
-        restaurants.put("Kudu", new String[]{"Chicken Sandwich", "Burger", "Fries"});
-        cafes.put("Barn's", new String[]{"Latte", "Cappuccino"});
-        cafes.put("Starbucks", new String[]{"Americano", "Matcha"});
+    // Enable submit only when type/place/item are valid
+    private void updateSubmit(RoundedButton submit, JComboBox<String> type, JComboBox<String> place, JComboBox<String> item) {
+        boolean ok = !bad((String) type.getSelectedItem())
+                && !bad((String) place.getSelectedItem())
+                && !bad((String) item.getSelectedItem());
+
+        submit.setEnabled(ok);
+
+        // Keep normal look when disabled
+        if (!ok) {
+            submit.setBackground(BTN_NORMAL);
+            submit.setForeground(Color.BLACK);
+        }
     }
 
-    // build list of places for combo box
-    private String[] buildPlacesList(Map<String, String[]> map) {
-        String[] arr = new String[map.size() + 1];
-        arr[0] = "Choose place";
+    // Small check for default choices
+    private boolean bad(String s) { return s == null || s.startsWith("Choose"); }
+
+    // Create a simple combo box style
+    private JComboBox<String> box(String... items) {
+        JComboBox<String> b = new JComboBox<>(items);
+        b.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        b.setFocusable(false);
+        b.setBackground(Color.WHITE);
+        return b;
+    }
+
+    // Wrap dropdown inside an InfoCard
+    private InfoCard card(String title, int x, int y, int w, int h, JComboBox<String> box) {
+        InfoCard c = new InfoCard(18);
+        c.setBounds(x, y, w, h);
+        c.setLayout(null);
+        c.addSubtitle(title, 14, 8, 120, 18);
+        box.setBounds(14, 30, w - 28, 36);
+        c.add(box);
+        return c;
+    }
+
+    // Replace combo items 
+    private void set(JComboBox<String> b, String first) {
+        b.setModel(new DefaultComboBoxModel<>(new String[]{first}));
+    }
+
+    // Replace combo items (full list)
+    private void set(JComboBox<String> b, String[] items) {
+        b.setModel(new DefaultComboBoxModel<>(items));
+    }
+
+    // Build list of places from a map
+    private String[] list(Map<String, String[]> m) {
+        String[] a = new String[m.size() + 1];
+        a[0] = "Choose place";
         int i = 1;
-        for (String k : map.keySet()) arr[i++] = k;
-        return arr;
+        for (String k : m.keySet()) a[i++] = k;
+        return a;
     }
 
-    // build list of items for combo box
-    private String[] buildItemsList(String[] items) {
-        String[] arr = new String[items.length + 1];
-        arr[0] = "Choose item";
-        System.arraycopy(items, 0, arr, 1, items.length);
-        return arr;
-    }
-
-    // generate random order id for demo only
-    private int generateOrderId() {
-        return 100 + new Random().nextInt(900);
-    }
-
-    // load image safely from resources
-    private Image loadImage(String path) {
-        try {
-            URL url = getClass().getResource(path);
-            if (url == null) return null;
-            return new ImageIcon(url).getImage();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    // combo box with rounded white background
-    static class RoundedComboBox extends JComboBox<String> {
-        private final int radius;
-
-        public RoundedComboBox(String[] items, int radius) {
-            super(items);
-            this.radius = radius;
-            setOpaque(false);
-            setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(Color.WHITE);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius * 2, radius * 2);
-            g2.dispose();
-            super.paintComponent(g);
-        }
-    }
-
-    // rounded glass panel used for title card
-    static class RoundedGlassPanel extends JPanel {
-        private final int radius;
-        private final Color fill;
-
-        public RoundedGlassPanel(int radius, Color fill) {
-            this.radius = radius;
-            this.fill = fill;
-            setOpaque(false);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(fill);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius * 2, radius * 2);
-            g2.dispose();
-            super.paintComponent(g);
-        }
+    // Build list of items from array
+    private String[] list(String[] items) {
+        String[] a = new String[items.length + 1];
+        a[0] = "Choose item";
+        System.arraycopy(items, 0, a, 1, items.length);
+        return a;
     }
 }
