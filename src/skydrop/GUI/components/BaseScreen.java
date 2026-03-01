@@ -32,7 +32,7 @@ public class BaseScreen extends JPanel {
         }
     }
 
-    // Create centered logo label
+    // Create centered logo 
     private JLabel createLogoLabel(int size, int y) {
 
         JLabel logo = new JLabel();
@@ -48,7 +48,7 @@ public class BaseScreen extends JPanel {
         return logo;
     }
 
-    // Image loader (internal use)
+    // Image loader
     private Image loadImage(Class<?> ref, String path) {
 
         java.net.URL url = ref.getResource(path);
