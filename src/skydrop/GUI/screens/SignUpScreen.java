@@ -4,82 +4,50 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
 
+import skydrop.GUI.components.BaseScreen;
+import skydrop.GUI.components.Label;
 import skydrop.GUI.components.RoundedButton;
 import skydrop.GUI.components.RoundedInputField;
 
-public class SignUpScreen extends JFrame {
+public class SignUpScreen extends BaseScreen {
 
     private static final int W = 375;
     private static final int H = 812;
 
-    private Image bgImage;
-    private Image originalLogo;
-
-    private final int logoSize = 250;
-    private final int logoYTop = 30;
-
-    private final Color bgFallback = Color.decode("#262525");
-
     public SignUpScreen() {
 
-        setTitle("SkyDrop - Sign Up");
-        setSize(W, H);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
+        // Initialize this screen using BaseScreen which loads the wallpaper and logo
+        super(SignUpScreen.class);
 
-        // ===== Root panel with background image =====
-        JPanel root = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        // Configure the main window
+        JFrame frame = new JFrame("SkyDrop - Sign Up");
+        frame.setSize(W, H);
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setContentPane(this);
 
-                if (bgImage != null) {
-                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-                } else {
-                    g2.setColor(bgFallback);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
-                g2.dispose();
-            }
-        };
+        setFocusable(true);
 
-        root.setBackground(bgFallback);
-        root.setFocusable(true);
-        setContentPane(root);
-
-        // ===== Load background and logo =====
-        bgImage = new ImageIcon(getClass().getResource("/Images/wallpaper.png")).getImage();
-        originalLogo = new ImageIcon(getClass().getResource("/Images/skydrop logo.png")).getImage();
-
-        // ===== Logo =====
-        JLabel logoLabel = new JLabel();
-        logoLabel.setSize(logoSize, logoSize);
-        logoLabel.setLocation((W - logoSize) / 2, logoYTop);
-
-        Image scaledLogo = originalLogo.getScaledInstance(logoSize, logoSize, Image.SCALE_SMOOTH);
-        logoLabel.setIcon(new ImageIcon(scaledLogo));
-        root.add(logoLabel);
-
-        // ===== Layout values =====
+        // Define layout measurements for the form elements
         int formX = 40;
         int fieldW = W - 80;
         int fieldH = 50;
 
-        int startY = logoYTop + logoSize + 60;
+        // Calculate the starting Y position based on logo placement in BaseScreen
+        int startY = 18 + 150 + 60;
 
-        // ===== Fields =====
+        // Create name input field with rounded style and placeholder support
         RoundedInputField nameField = new RoundedInputField("Name", 18, false);
         nameField.setBounds(formX, startY, fieldW, fieldH);
-        root.add(nameField);
+        add(nameField);
 
+        // Create phone number input field
         RoundedInputField phoneField = new RoundedInputField("Phone Number", 18, false);
         phoneField.setBounds(formX, startY + 70, fieldW, fieldH);
-        root.add(phoneField);
+        add(phoneField);
 
-        // ===== District dropdown =====
+        // Create district dropdown
         String[] jeddahDistricts = {
                 "Your District",
                 "Al Rawdah",
@@ -91,22 +59,23 @@ public class SignUpScreen extends JFrame {
 
         RoundedComboBox districtBox = new RoundedComboBox(jeddahDistricts, 18);
         districtBox.setBounds(formX, startY + 140, fieldW, fieldH);
-        root.add(districtBox);
+        add(districtBox);
 
+        // Create password input field with masking enabled
         RoundedInputField passField = new RoundedInputField("Password", 18, true);
         passField.setBounds(formX, startY + 210, fieldW, fieldH);
-        root.add(passField);
+        add(passField);
 
-        // ===== Sign Up button =====
+        // Create and center the Sign Up button
         int buttonWidth = fieldW / 2;
         int buttonX = (W - buttonWidth) / 2;
 
         RoundedButton signUpButton = new RoundedButton("Sign Up", 18);
         signUpButton.setBounds(buttonX, startY + 280, buttonWidth, 55);
         signUpButton.setFont(new Font("SansSerif", Font.BOLD, 16));
-        root.add(signUpButton);
+        add(signUpButton);
 
-        // Colors
+        // Define normal and active button colors
         Color normalBg = Color.WHITE;
         Color normalFg = Color.BLACK;
         Color activeBg = Color.decode("#0092D9");
@@ -115,9 +84,8 @@ public class SignUpScreen extends JFrame {
         signUpButton.setBackground(normalBg);
         signUpButton.setForeground(normalFg);
 
-        // ===== Button color logic (includes district selection) =====
+        // Update button appearance only when all fields are valid
         Runnable updateButtonState = () -> {
-
             String name = nameField.getText().trim();
             String phone = phoneField.getText().trim();
             String pass = passField.getText().trim();
@@ -137,7 +105,7 @@ public class SignUpScreen extends JFrame {
             }
         };
 
-        // Listen for typing
+        // Attach listeners to detect text changes and refresh button state
         javax.swing.event.DocumentListener dl = new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
@@ -148,35 +116,39 @@ public class SignUpScreen extends JFrame {
         phoneField.getDocument().addDocumentListener(dl);
         passField.getDocument().addDocumentListener(dl);
 
-        // Listen for district changes
         districtBox.addActionListener(e -> updateButtonState.run());
 
-        // ===== OR label =====
-        JLabel orLabel = new JLabel("or", SwingConstants.CENTER);
-        orLabel.setBounds(0, startY + 350, W, 20);
-        orLabel.setForeground(Color.WHITE);
-        orLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        root.add(orLabel);
+        // Create centered "or" label using reusable Label component
+        JLabel orLabel = Label.createLabel(
+                "or",
+                0, startY + 350, W, 20,
+                new Font("SansSerif", Font.PLAIN, 14),
+                Color.WHITE,
+                SwingConstants.CENTER
+        );
+        add(orLabel);
 
-        // ===== Sign In label =====
-        JLabel signInLabel = new JLabel("<html><u>Sign in</u></html>", SwingConstants.CENTER);
-        signInLabel.setBounds(0, startY + 375, W, 25);
-        signInLabel.setForeground(Color.WHITE);
-        signInLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        // Create clickable "Sign in" label that opens the SignInPage
+        JLabel signInLabel = Label.createLabel(
+                "<html><u>Sign in</u></html>",
+                0, startY + 375, W, 25,
+                new Font("SansSerif", Font.BOLD, 14),
+                Color.WHITE,
+                SwingConstants.CENTER
+        );
         signInLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        root.add(signInLabel);
+        add(signInLabel);
 
         signInLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 new SignInPage();
-                dispose();
+                frame.dispose();
             }
         });
 
-        // ===== Sign Up action =====
+        // Handle Sign Up button action and basic validation
         signUpButton.addActionListener(e -> {
-
             String name = nameField.getText().trim();
             String phone = phoneField.getText().trim();
             String pass = passField.getText().trim();
@@ -189,22 +161,19 @@ public class SignUpScreen extends JFrame {
             boolean districtValid = district != null && !district.equals("Your District");
 
             if (name.isEmpty() || phone.isEmpty() || pass.isEmpty() || !districtValid) {
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(frame,
                         "Please fill all fields and select your district.",
                         "Missing Info",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-
-//-------------------------------------
-            // GO TO ORDER TEST SCREEN (after sign up)
             try {
                 new OrderTestScreen();
-                dispose();
+                frame.dispose();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(frame,
                         "Order screen failed to open:\n"
                                 + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
                         "Error",
@@ -212,21 +181,18 @@ public class SignUpScreen extends JFrame {
             }
         });
 
+        // Allow pressing Enter to trigger the Sign Up button
+        frame.getRootPane().setDefaultButton(signUpButton);
 
+        frame.setVisible(true);
 
-
-        getRootPane().setDefaultButton(signUpButton);
-
-        setVisible(true);
-
-        // No cursor by default
+        // Clear initial focus so no field appears auto-selected on startup
         SwingUtilities.invokeLater(() -> {
-            root.requestFocusInWindow();
+            requestFocusInWindow();
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
         });
     }
 
-    // ===== Rounded ComboBox (same style as fields) =====
     static class RoundedComboBox extends JComboBox<String> {
 
         private final int radius;

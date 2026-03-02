@@ -4,103 +4,69 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
 
+import skydrop.GUI.components.BaseScreen;
+import skydrop.GUI.components.Label;
 import skydrop.GUI.components.RoundedButton;
 import skydrop.GUI.components.RoundedInputField;
 
-public class SignInPage extends JFrame {
+public class SignInPage extends BaseScreen {
 
     private static final int W = 375;
     private static final int H = 812;
 
-    private Image bgImage;
-    private Image originalLogo;
-
-    private final int logoSize = 250;
-    private final int logoYTop = 30;
-
-    private final Color bgFallback = Color.decode("#262525");
-
     public SignInPage() {
 
-        setTitle("SkyDrop - Sign In");
-        setSize(W, H);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
+        // Initialize this screen using BaseScreen which loads the wallpaper and logo
+        super(SignInPage.class);
 
-        // ===== Root panel with background image =====
-        JPanel root = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        // Configure the main window
+        JFrame frame = new JFrame("SkyDrop - Sign In");
+        frame.setSize(W, H);
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setContentPane(this);
 
-                if (bgImage != null) {
-                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-                } else {
-                    g2.setColor(bgFallback);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
+        setFocusable(true);
 
-                g2.dispose();
-            }
-        };
-
-        root.setBackground(bgFallback);
-        root.setFocusable(true);
-        setContentPane(root);
-
-        // ===== Load background and logo =====
-        bgImage = new ImageIcon(getClass().getResource("/Images/wallpaper.png")).getImage();
-        originalLogo = new ImageIcon(getClass().getResource("/Images/skydrop logo.png")).getImage();
-
-        // ===== Logo =====
-        JLabel logoLabel = new JLabel();
-        logoLabel.setSize(logoSize, logoSize);
-        logoLabel.setLocation((W - logoSize) / 2, logoYTop);
-
-        Image scaledLogo = originalLogo.getScaledInstance(logoSize, logoSize, Image.SCALE_SMOOTH);
-        logoLabel.setIcon(new ImageIcon(scaledLogo));
-        root.add(logoLabel);
-
-        // ===== Layout =====
+        // Define layout measurements for the form elements
         int formX = 40;
         int fieldW = W - 80;
         int fieldH = 50;
-        int startY = logoYTop + logoSize + 200;
 
-        // ===== Fields =====
+        // Calculate the starting Y position based on logo placement in BaseScreen
+        int startY = 18 + 150 + 200;
+
+        // Create phone number input field with rounded style and placeholder support
         RoundedInputField phoneField = new RoundedInputField("Phone Number", 18, false);
         phoneField.setBounds(formX, startY, fieldW, fieldH);
-        root.add(phoneField);
+        add(phoneField);
 
+        // Create password input field with masking enabled
         RoundedInputField passField = new RoundedInputField("Password", 18, true);
         passField.setBounds(formX, startY + 70, fieldW, fieldH);
-        root.add(passField);
+        add(passField);
 
-        // ===== Sign In button =====
+        // Create and center the Sign In button
         int buttonWidth = fieldW / 2;
         int buttonX = (W - buttonWidth) / 2;
 
         RoundedButton signInButton = new RoundedButton("Sign In", 18);
         signInButton.setBounds(buttonX, startY + 140, buttonWidth, 55);
         signInButton.setFont(new Font("SansSerif", Font.BOLD, 16));
-        root.add(signInButton);
+        add(signInButton);
 
-        // Colors
+        // Define normal and active button colors
         Color normalBg = Color.WHITE;
         Color normalFg = Color.BLACK;
         Color activeBg = Color.decode("#0092D9");
         Color activeFg = Color.WHITE;
 
-        // Default state
         signInButton.setBackground(normalBg);
         signInButton.setForeground(normalFg);
 
-        // ===== Button color logic =====
+        // Update button appearance only when both fields contain valid input
         Runnable updateButtonState = () -> {
-
             String phone = phoneField.getText().trim();
             String pass = passField.getText().trim();
 
@@ -116,7 +82,7 @@ public class SignInPage extends JFrame {
             }
         };
 
-        // Listen for typing
+        // Attach listeners to detect text changes and refresh button state
         phoneField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
@@ -129,33 +95,37 @@ public class SignInPage extends JFrame {
             public void changedUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
         });
 
-        // ===== OR label =====
-        JLabel orLabel = new JLabel("or", SwingConstants.CENTER);
-        orLabel.setBounds(0, startY + 210, W, 20);
-        orLabel.setForeground(Color.WHITE);
-        orLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        root.add(orLabel);
+        // Create centered "or" label using reusable Label component
+        JLabel orLabel = Label.createLabel(
+                "or",
+                0, startY + 210, W, 20,
+                new Font("SansSerif", Font.PLAIN, 14),
+                Color.WHITE,
+                SwingConstants.CENTER
+        );
+        add(orLabel);
 
-        // ===== Sign Up label (linked to SignUpScreen) =====
-        JLabel signUpLabel = new JLabel("<html><u>Sign up</u></html>", SwingConstants.CENTER);
-        signUpLabel.setBounds(0, startY + 235, W, 25);
-        signUpLabel.setForeground(Color.WHITE);
-        signUpLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        // Create clickable "Sign up" label that opens the SignUp screen
+        JLabel signUpLabel = Label.createLabel(
+                "<html><u>Sign up</u></html>",
+                0, startY + 235, W, 25,
+                new Font("SansSerif", Font.BOLD, 14),
+                Color.WHITE,
+                SwingConstants.CENTER
+        );
         signUpLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        root.add(signUpLabel);
+        add(signUpLabel);
 
-        // ✅ Open SignUpScreen when clicked
         signUpLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 new SignUpScreen();
-                dispose();
+                frame.dispose();
             }
         });
 
-        // ===== Sign In action =====
+        // Handle Sign In button action and basic validation
         signInButton.addActionListener(e -> {
-
             String phone = phoneField.getText().trim();
             String pass = passField.getText().trim();
 
@@ -163,27 +133,19 @@ public class SignInPage extends JFrame {
             if (passField.isPlaceholderActive()) pass = "";
 
             if (phone.isEmpty() || pass.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(frame,
                         "Please enter phone number and password.",
                         "Missing Info",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-
-
-
-
-
-
-            //-------------------------------------
-            //  GO TO ORDER TEST SCREEN (after sign in)
             try {
                 new OrderTestScreen();
-                dispose();
+                frame.dispose();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(frame,
                         "Order screen failed to open:\n"
                                 + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
                         "Error",
@@ -191,16 +153,14 @@ public class SignInPage extends JFrame {
             }
         });
 
+        // Allow pressing Enter to trigger the Sign In button
+        frame.getRootPane().setDefaultButton(signInButton);
 
+        frame.setVisible(true);
 
-
-        getRootPane().setDefaultButton(signInButton);
-
-        setVisible(true);
-
-        // No cursor by default
+        // Clear initial focus so no field appears auto-selected on startup
         SwingUtilities.invokeLater(() -> {
-            root.requestFocusInWindow();
+            requestFocusInWindow();
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
         });
     }
