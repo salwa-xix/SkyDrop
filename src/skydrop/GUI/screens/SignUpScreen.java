@@ -1,51 +1,42 @@
 package skydrop.GUI.screens;
 
+import skydrop.GUI.components.*;
+import static skydrop.GUI.components.Label.createLabel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.KeyboardFocusManager;
 
-import skydrop.GUI.components.BaseScreen;
-import skydrop.GUI.components.Label;
-import skydrop.GUI.components.RoundedButton;
-import skydrop.GUI.components.RoundedInputField;
+public class SignUpScreen extends JFrame {
 
-public class SignUpScreen extends BaseScreen {
-
-    private static final int W = 375;
-    private static final int H = 812;
+    // Screen size
+    private static final int W = 375, H = 812;
 
     public SignUpScreen() {
 
-        // Initialize this screen using BaseScreen which loads the wallpaper and logo
-        super(SignUpScreen.class);
+        // Frame setup
+        setTitle("SkyDrop - Sign Up");
+        setSize(W, H);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setResizable(false);
 
-        // Configure the main window
-        JFrame frame = new JFrame("SkyDrop - Sign Up");
-        frame.setSize(W, H);
-        frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setContentPane(this);
+        // Root screen (background + logo)
+        BaseScreen root = new BaseScreen(getClass());
+        setContentPane(root);
 
-        setFocusable(true);
-
-        // Define layout measurements for the form elements
-        int formX = 40;
-        int fieldW = W - 80;
-        int fieldH = 50;
-
-        // Calculate the starting Y position based on logo placement in BaseScreen
-        int startY = 18 + 150 + 60;
+        // Layout values
+        int cw = 295, ch = 50, x = (W - cw) / 2, y = 240, g = 20;
 
         // Create name input field with rounded style and placeholder support
         RoundedInputField nameField = new RoundedInputField("Name", 18, false);
-        nameField.setBounds(formX, startY, fieldW, fieldH);
-        add(nameField);
+        nameField.setBounds(x, y, cw, ch);
+        root.add(nameField);
 
         // Create phone number input field
         RoundedInputField phoneField = new RoundedInputField("Phone Number", 18, false);
-        phoneField.setBounds(formX, startY + 70, fieldW, fieldH);
-        add(phoneField);
+        phoneField.setBounds(x, y + (ch + g), cw, ch);
+        root.add(phoneField);
 
         // Create district dropdown
         String[] jeddahDistricts = {
@@ -58,22 +49,21 @@ public class SignUpScreen extends BaseScreen {
         };
 
         RoundedComboBox districtBox = new RoundedComboBox(jeddahDistricts, 18);
-        districtBox.setBounds(formX, startY + 140, fieldW, fieldH);
-        add(districtBox);
+        districtBox.setBounds(x, y + 2 * (ch + g), cw, ch);
+        root.add(districtBox);
 
         // Create password input field with masking enabled
         RoundedInputField passField = new RoundedInputField("Password", 18, true);
-        passField.setBounds(formX, startY + 210, fieldW, fieldH);
-        add(passField);
+        passField.setBounds(x, y + 3 * (ch + g), cw, ch);
+        root.add(passField);
 
         // Create and center the Sign Up button
-        int buttonWidth = fieldW / 2;
-        int buttonX = (W - buttonWidth) / 2;
+        int bw = cw / 2, bh = 55, bx = (W - bw) / 2, by = y + 4 * (ch + g) + 20;
 
         RoundedButton signUpButton = new RoundedButton("Sign Up", 18);
-        signUpButton.setBounds(buttonX, startY + 280, buttonWidth, 55);
+        signUpButton.setBounds(bx, by, bw, bh);
         signUpButton.setFont(new Font("SansSerif", Font.BOLD, 16));
-        add(signUpButton);
+        root.add(signUpButton);
 
         // Define normal and active button colors
         Color normalBg = Color.WHITE;
@@ -119,31 +109,21 @@ public class SignUpScreen extends BaseScreen {
         districtBox.addActionListener(e -> updateButtonState.run());
 
         // Create centered "or" label using reusable Label component
-        JLabel orLabel = Label.createLabel(
-                "or",
-                0, startY + 350, W, 20,
+        root.add(createLabel("or", 0, by + bh + 18, W, 20,
                 new Font("SansSerif", Font.PLAIN, 14),
-                Color.WHITE,
-                SwingConstants.CENTER
-        );
-        add(orLabel);
+                Color.WHITE, SwingConstants.CENTER));
 
         // Create clickable "Sign in" label that opens the SignInPage
-        JLabel signInLabel = Label.createLabel(
-                "<html><u>Sign in</u></html>",
-                0, startY + 375, W, 25,
+        JLabel signInLabel = createLabel("<html><u>Sign in</u></html>", 0, by + bh + 43, W, 25,
                 new Font("SansSerif", Font.BOLD, 14),
-                Color.WHITE,
-                SwingConstants.CENTER
-        );
+                Color.WHITE, SwingConstants.CENTER);
         signInLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        add(signInLabel);
+        root.add(signInLabel);
 
         signInLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                new SignInPage();
-                frame.dispose();
+            @Override public void mouseClicked(java.awt.event.MouseEvent e) {
+                new SignInScreen();
+                dispose();
             }
         });
 
@@ -161,7 +141,7 @@ public class SignUpScreen extends BaseScreen {
             boolean districtValid = district != null && !district.equals("Your District");
 
             if (name.isEmpty() || phone.isEmpty() || pass.isEmpty() || !districtValid) {
-                JOptionPane.showMessageDialog(frame,
+                JOptionPane.showMessageDialog(this,
                         "Please fill all fields and select your district.",
                         "Missing Info",
                         JOptionPane.ERROR_MESSAGE);
@@ -170,10 +150,10 @@ public class SignUpScreen extends BaseScreen {
 
             try {
                 new OrderTestScreen();
-                frame.dispose();
+                dispose();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(frame,
+                JOptionPane.showMessageDialog(this,
                         "Order screen failed to open:\n"
                                 + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
                         "Error",
@@ -182,13 +162,13 @@ public class SignUpScreen extends BaseScreen {
         });
 
         // Allow pressing Enter to trigger the Sign Up button
-        frame.getRootPane().setDefaultButton(signUpButton);
+        getRootPane().setDefaultButton(signUpButton);
 
-        frame.setVisible(true);
+        setVisible(true);
 
         // Clear initial focus so no field appears auto-selected on startup
         SwingUtilities.invokeLater(() -> {
-            requestFocusInWindow();
+            root.requestFocusInWindow();
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
         });
     }
