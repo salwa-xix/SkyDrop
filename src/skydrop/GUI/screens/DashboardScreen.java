@@ -86,10 +86,10 @@ public class DashboardScreen extends JFrame {
             }
         });
 
-// Run this when "Report" button is clicked
+    // Run this when "Report" button is clicked
         reportButton.addActionListener(e -> {
-            new ReportScreen();     // open report window
-            dispose();              // close current dashboard window
+            new ReportScreen(); // open report window
+            dispose(); // close current dashboard window
         });
 
         root.add(reportButton);

@@ -29,7 +29,7 @@ public class InfoCard extends RoundedCard {
         addSubtitle(text, x, y, w, h, SwingConstants.LEFT);
     }
 
-    // Subtitle (default LEFT)
+    // Subtitle (custom alignment)
     public void addSubtitle(String text, int x, int y, int w, int h, int align) {
         add(Label.createLabel(
                 text, x, y, w, h,
@@ -41,20 +41,10 @@ public class InfoCard extends RoundedCard {
 
     public void addInfoRow(String key, String value, int keyX, int keyW, int valueX, int valueW, int y) {
 
-        add(Label.createLabel(
-                key,
-                keyX, y, keyW, 26,
-                new Font("SansSerif", Font.BOLD, 14),
-                Color.BLACK,
-                SwingConstants.LEFT
+        add(Label.createLabel(key, keyX, y, keyW, 26, new Font("SansSerif", Font.BOLD, 14), Color.BLACK, SwingConstants.LEFT
         ));
 
-        add(Label.createLabel(
-                value,
-                valueX, y, valueW, 26,
-                new Font("SansSerif", Font.PLAIN, 14),
-                Color.BLACK,
-                SwingConstants.LEFT
+        add(Label.createLabel(value, valueX, y, valueW, 26, new Font("SansSerif", Font.PLAIN, 14), Color.BLACK, SwingConstants.LEFT
         ));
     }
 

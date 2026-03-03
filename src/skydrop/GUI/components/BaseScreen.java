@@ -14,7 +14,7 @@ public class BaseScreen extends JPanel {
         // Absolute layout for full control
         setLayout(null);
 
-        // Load shared images
+        // Load images
         backgroundImage = loadImage(ref, "/Images/wallpaper.png");
         logoImage = loadImage(ref, "/Images/skydrop logo.png");
 
@@ -32,7 +32,7 @@ public class BaseScreen extends JPanel {
         }
     }
 
-    // Create centered logo 
+    // Create centered logo
     private JLabel createLogoLabel(int size, int y) {
 
         JLabel logo = new JLabel();

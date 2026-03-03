@@ -3,7 +3,7 @@ package skydrop.GUI.components;
 import javax.swing.*;
 import java.awt.*;
 
-// for the trans shape
+// For the rounded trans shape
 public class RoundedCard extends JPanel {
 
     private final int radius;

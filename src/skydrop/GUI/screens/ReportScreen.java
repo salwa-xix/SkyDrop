@@ -72,7 +72,7 @@ public class ReportScreen extends JFrame {
     // Run this when "Back" button is clicked
         backButton.addActionListener(e -> {
             new DashboardScreen();  // open dashboard window
-            dispose();              // close current report window
+            dispose(); // close current report window
         });
 
         root.add(backButton);
