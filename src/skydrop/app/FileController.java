@@ -14,20 +14,10 @@ public class FileController {
         }
     }
 
-    public ArrayList<String> readLogs() {
-        ArrayList<String> logs = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("delivery_log.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                logs.add(line);
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading logs: " + e.getMessage());
-        }
-        return logs;
-    }
 
+    // read from DB + write report
     public void saveReportToFile(String reportText) {
+    // Queries to calculate totals
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("report.txt"))) {
             writer.write(reportText);
         } catch (IOException e) {
@@ -35,29 +25,4 @@ public class FileController {
         }
     }
 
-    public String readReportFromFile() {
-        StringBuilder report = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader("report.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                report.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading report: " + e.getMessage());
-        }
-        return report.toString();
-    }
-
-    public ArrayList<String> readPlacesFromFile(String fileName) {
-        ArrayList<String> places = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                places.add(line);
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading places file: " + e.getMessage());
-        }
-        return places;
-    }
 }
