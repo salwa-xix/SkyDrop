@@ -98,8 +98,9 @@ public class SplashScreen extends JFrame {
 
         //  navigates the user to the SignInPage
         startButton.addActionListener(e -> {
-            new SignInScreen();  // open Sign In screen
-            dispose();         // close Splash screen
+            SignInScreen screen = new SignInScreen();
+            screen.setLocation(SplashScreen.this.getLocation());
+            dispose();
         });
 
         // Pressing Enter triggers the Start button

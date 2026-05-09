@@ -1,16 +1,22 @@
 package skydrop.GUI.screens;
-
+import skydrop.app.Main;
 import skydrop.GUI.components.BaseScreen;
 import skydrop.GUI.components.InfoCard;
 import skydrop.GUI.components.RoundedButton;
+import skydrop.app.SkyDropClient;
+import skydrop.app.User;
+import skydrop.app.DatabaseController;
 
 import javax.swing.*;
 import java.awt.*;
 
 import static skydrop.GUI.components.Label.createLabel;
+import static skydrop.app.Main.db;
 
 public class OrderStatusScreen extends JFrame {
 
+    private User currentUser;
+    private int orderId;
     // Screen size
     private static final int W = 375, H = 812;
 
@@ -28,8 +34,10 @@ public class OrderStatusScreen extends JFrame {
     private RoundedButton send;
     private int rating = 0; // selected stars (0–5)
 
-    public OrderStatusScreen(int orderId, String type, String place, String item) {
+    public OrderStatusScreen(int orderId, String type, String place, String item, User user) {
 
+        this.currentUser = user;
+        this.orderId = orderId;
         // Frame setup
         setTitle("SkyDrop - Order Status");
         setSize(W, H);
@@ -65,7 +73,44 @@ public class OrderStatusScreen extends JFrame {
         rejP  = panel(cw);  rejP.setVisible(false);
         card.add(rateP);
         card.add(rejP);
+        Timer timer = new Timer(1000, e -> {
 
+            String response = SkyDropClient.sendRequest("GET_STATUS|" + orderId);
+
+            if (response == null || !response.startsWith("STATUS|")) return;
+
+            String currentStatus = response.split("\\|")[1];
+
+            if (currentStatus == null) return;
+
+            switch (currentStatus) {
+
+                case "Waiting":
+                    set("Waiting", "#888888", "Waiting for available drone...");
+                    break;
+
+                case "Accepted":
+                    set("Accepted", "#18A85B", "Preparing your order...");
+                    break;
+
+                case "On the way":
+                    set("On the way", "#D38B00", "Drone is on the way...");
+                    break;
+
+                case "Delivered":
+                    set("Delivered", "#18A85B", "Delivered successfully!");
+                    showRate();
+                    ((Timer) e.getSource()).stop();
+                    break;
+
+                case "Rejected":
+                    rejected("Bad weather conditions.");
+                    ((Timer) e.getSource()).stop();
+                    break;
+            }
+        });
+
+        timer.start();
         // Rating UI
         rateP.add(lbl("Please rate order", 0, 0, cw, 20, 14, aB(160)));
 
@@ -102,11 +147,22 @@ public class OrderStatusScreen extends JFrame {
         });
 
         send.addActionListener(e -> {
+
             if (rating == 0) return;
-            JOptionPane.showMessageDialog(this, "Thanks! Rating sent: " + rating + " stars");
-            new OrderTestScreen();
+
+            SkyDropClient.sendRequest(
+                    "SAVE_RATING|" + orderId + "|" + rating
+            );            db.connect();
+            db.saveRating(orderId, rating);
+
+            JOptionPane.showMessageDialog(this,
+                    "Thanks! Rating sent: " + rating + " stars");
+
+            OrderTestScreen screen = new OrderTestScreen(currentUser);
+            screen.setLocation(this.getLocation());
             dispose();
         });
+
         rateP.add(send);
 
         // Rejected UI
@@ -116,29 +172,12 @@ public class OrderStatusScreen extends JFrame {
         RoundedButton newOrder = btn("New Order", (cw - 170) / 2, 95, 170, 55);
         newOrder.enableHover(Color.WHITE, Color.decode("#0092D9"));
         newOrder.addActionListener(e -> {
-            new OrderTestScreen();
+            OrderTestScreen screen = new OrderTestScreen(currentUser);
+            screen.setLocation(this.getLocation());
             dispose();
         });
         rejP.add(newOrder);
 
-        // Status flow simulation
-        boolean reject = false; // change to true to test reject flow
-
-        later(1200, () -> {
-            if (reject) rejected("Busy now — order rejected.");
-            else set("Accepted", "#18A85B", "Preparing your order...");
-        });
-
-        later(3200, () -> {
-            if (!reject) set("On the way", "#D38B00", "Drone is on the way...");
-        });
-
-        later(5200, () -> {
-            if (!reject) {
-                set("Delivered", "#18A85B", "Delivered successfully!");
-                showRate();
-            }
-        });
 
         updateStars();
         setVisible(true);

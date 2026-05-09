@@ -1,6 +1,8 @@
 package skydrop.GUI.screens;
 
 import skydrop.GUI.components.*;
+import skydrop.app.User;
+
 import static skydrop.GUI.components.Label.createLabel;
 
 import javax.swing.*;
@@ -122,7 +124,8 @@ public class SignUpScreen extends JFrame {
 
         signInLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override public void mouseClicked(java.awt.event.MouseEvent e) {
-                new SignInScreen();
+                SignInScreen screen = new SignInScreen();
+                screen.setLocation(SignUpScreen.this.getLocation());
                 dispose();
             }
         });
@@ -149,8 +152,18 @@ public class SignUpScreen extends JFrame {
             }
 
             try {
-                new OrderTestScreen();
+
+                User user = new User(
+                        name,
+                        phone,
+                        pass,
+                        district
+                );
+
+                OrderTestScreen screen = new OrderTestScreen(user);
+                screen.setLocation(SignUpScreen.this.getLocation());
                 dispose();
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this,

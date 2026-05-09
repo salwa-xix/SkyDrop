@@ -15,6 +15,7 @@ public class FileController {
     }
 
 
+
     // read from DB + write report
     public void saveReportToFile(String reportText) {
     // Queries to calculate totals

@@ -3,6 +3,7 @@ package skydrop.GUI.screens;
 import skydrop.GUI.components.BaseScreen;
 import skydrop.GUI.components.InfoCard;
 import skydrop.GUI.components.RoundedButton;
+import skydrop.app.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,8 +32,11 @@ public class OrderTestScreen extends JFrame {
         put("Starbucks", new String[]{"Americano", "Matcha"});
     }};
 
-    public OrderTestScreen() {
+    private User currentUser;
 
+    public OrderTestScreen(User user) {
+
+        this.currentUser = user;
         // Frame setup
         setTitle("SkyDrop - Create Order");
         setSize(W, H);
@@ -140,8 +144,36 @@ public class OrderTestScreen extends JFrame {
             }
 
             // Open next screen with a demo order id
-            new OrderStatusScreen(100 + new Random().nextInt(900), t, p, it);
-            dispose();
+            String response = SkyDropClient.sendRequest(
+                    "CREATE_ORDER|"
+                            + currentUser.getPhone() + "|"
+                            + t + "|"
+                            + p + "|"
+                            + it + "|"
+                            + currentUser.getDistrict()
+            );
+
+            if (response != null && response.startsWith("ORDER_CREATED")) {
+
+                String[] parts = response.split("\\|");
+
+                int orderId = Integer.parseInt(parts[1]);
+
+                OrderStatusScreen screen =
+                        new OrderStatusScreen(orderId, t, p, it, currentUser);
+
+                screen.setLocation(this.getLocation());
+                dispose();
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Could not create order.",
+                        "Order Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
         });
 
         setVisible(true);

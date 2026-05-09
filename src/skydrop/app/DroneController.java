@@ -33,10 +33,12 @@ public class DroneController {
     }
 
     public Drone assignDroneToOrder(Order order) {
+
         Drone drone = findAvailableDrone(order.getDistrict());
 
         if (drone != null) {
             drone.assignOrder(order.getOrderId());
+            drone.setStatus("Busy");
             order.assignDrone(drone.getDroneId());
         }
 
@@ -44,17 +46,27 @@ public class DroneController {
     }
 
     public void finishDelivery(Order order) {
+
         if (order.getAssignedDroneId() != null) {
-            Drone drone = findDroneById(order.getAssignedDroneId());
+
+            Drone drone = findDroneById(
+                    order.getAssignedDroneId()
+            );
 
             if (drone != null) {
+
                 drone.releaseOrder();
+
+                // Make drone available again
+                drone.setStatus("Idle");
+
                 drone.incrementDeliveredCount();
             }
 
             order.removeDrone();
         }
     }
+
 
     public void refreshQueues(ArrayList<Order> orders) {
         for (Drone drone : drones) {

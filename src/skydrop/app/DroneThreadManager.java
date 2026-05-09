@@ -2,19 +2,24 @@ package skydrop.app;
 
 import java.util.ArrayList;
 
+import java.util.ArrayList;
+
 public class DroneThreadManager {
 
     private ArrayList<DroneThread> droneThreads = new ArrayList<>();
 
     public void startDroneThreads(ArrayList<Drone> drones,
-                                  ArrayList<Order> orders,
+                                  OrderController orderController,
+                                  DroneController droneController,
                                   DatabaseController databaseController,
                                   FileController fileController) {
 
         for (Drone drone : drones) {
+
             DroneThread thread = new DroneThread(
                     drone,
-                    orders,
+                    orderController,
+                    droneController,
                     databaseController,
                     fileController
             );
@@ -25,6 +30,7 @@ public class DroneThreadManager {
     }
 
     public void stopAllThreads() {
+
         for (DroneThread thread : droneThreads) {
             thread.stopDrone();
         }

@@ -1,77 +1,119 @@
 package skydrop.app;
 
-import java.util.ArrayList;
-
 public class DroneThread extends Thread {
 
     private Drone drone;
-    private ArrayList<Order> orders;
+    private OrderController orderController;
+    private DroneController droneController;
     private DatabaseController databaseController;
     private FileController fileController;
     private boolean running = true;
 
     public DroneThread(Drone drone,
-                       ArrayList<Order> orders,
+                       OrderController orderController,
+                       DroneController droneController,
                        DatabaseController databaseController,
                        FileController fileController) {
+
         this.drone = drone;
-        this.orders = orders;
+        this.orderController = orderController;
+        this.droneController = droneController;
         this.databaseController = databaseController;
         this.fileController = fileController;
     }
 
     @Override
     public void run() {
-        while (running) {
-            try {
-                Order order = findWaitingOrderForDrone();
 
-                if (order != null) {
-                    processOrder(order);
+        fileController.writeLog(
+                "Drone " + drone.getDroneId() + " thread started."
+        );
+
+        while (running) {
+
+            try {
+
+                if (drone.isAvailable()) {
+
+                    Integer orderId = databaseController.tryClaimNextWaitingOrder(
+                            drone.getDroneId(),
+                            drone.getDistrict()
+                    );
+
+                    if (orderId != null) {
+                        deliverOrder(orderId);
+                    }
                 }
 
-                Thread.sleep(1000); // drone checks every 1 second
+                Thread.sleep(1000);
 
             } catch (InterruptedException e) {
+
                 running = false;
-                fileController.writeLog("Drone " + drone.getDroneId() + " thread stopped.");
+                fileController.writeLog(
+                        "Drone " + drone.getDroneId() + " thread stopped."
+                );
+
             } catch (Exception e) {
-                fileController.writeLog("Error in Drone " + drone.getDroneId() + ": " + e.getMessage());
+
+                fileController.writeLog(
+                        "Drone " + drone.getDroneId()
+                                + " error: "
+                                + e.getMessage()
+                );
             }
         }
     }
 
-    private synchronized Order findWaitingOrderForDrone() {
-        for (Order order : orders) {
-            if (order.getStatus().equalsIgnoreCase("Waiting")
-                    && order.getDistrict().equalsIgnoreCase(drone.getDistrict())) {
+    private void deliverOrder(int orderId) throws InterruptedException {
 
-                order.assignDrone(drone.getDroneId());
-                order.updateStatus("In Progress");
+        drone.assignOrder(orderId);
 
-                drone.assignOrder(order.getOrderId());
+        Order order = orderController.findOrderById(orderId);
 
-                databaseController.updateOrderStatus(order.getOrderId(), "In Progress");
-                fileController.writeLog("Drone " + drone.getDroneId()
-                        + " assigned to order " + order.getOrderId());
-
-                return order;
-            }
+        if (order != null) {
+            order.assignDrone(drone.getDroneId());
+            order.updateStatus("Accepted");
         }
-        return null;
-    }
 
-    private void processOrder(Order order) throws InterruptedException {
-        Thread.sleep(5000); // simulate delivery time
+        fileController.writeLog(
+                "Drone " + drone.getDroneId()
+                        + " accepted order "
+                        + orderId
+        );
 
-        order.updateStatus("Delivered");
-        databaseController.updateOrderStatus(order.getOrderId(), "Delivered");
+        Thread.sleep(10000);
+
+        databaseController.updateOrderStatus(orderId, "On the way");
+
+        if (order != null) {
+            order.updateStatus("On the way");
+        }
+
+        fileController.writeLog(
+                "Order " + orderId + " is on the way"
+        );
+
+        Thread.sleep(10000);
+
+        databaseController.updateOrderStatus(orderId, "Delivered");
+
+        if (order != null) {
+            order.updateStatus("Delivered");
+        }
+
+        databaseController.releaseDrone(drone.getDroneId());
 
         drone.releaseOrder();
         drone.incrementDeliveredCount();
 
-        fileController.writeLog("Order " + order.getOrderId()
-                + " delivered by Drone " + drone.getDroneId());
+        droneController.refreshQueues(orderController.getAllOrders());
+
+        fileController.writeLog(
+                "Order " + orderId
+                        + " delivered by Drone "
+                        + drone.getDroneId()
+        );
     }
 
     public void stopDrone() {

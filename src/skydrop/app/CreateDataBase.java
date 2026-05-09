@@ -9,7 +9,7 @@ public class CreateDataBase {
 
     private static final String URL = "jdbc:mysql://localhost:3306/skydrop";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "2244!mawadah";
 
     public static void createTables() {
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -27,7 +27,7 @@ public class CreateDataBase {
 
             String createOrdersTable = """
                 CREATE TABLE IF NOT EXISTS orders (
-                    order_id INT PRIMARY KEY,
+                    order_id INT AUTO_INCREMENT PRIMARY KEY,
                     user_phone VARCHAR(20) NOT NULL,
                     place_type VARCHAR(50) NOT NULL,
                     place_name VARCHAR(100) NOT NULL,
@@ -48,7 +48,7 @@ public class CreateDataBase {
         status VARCHAR(50) NOT NULL DEFAULT 'Idle',
         current_order_id INT NULL,
         delivered_count INT DEFAULT 0,
-        queue_count INT DEFAULT 0,
+        queue_count INT DEFAULT 0
     )
     """;
 
