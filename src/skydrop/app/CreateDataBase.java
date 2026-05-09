@@ -9,7 +9,7 @@ public class CreateDataBase {
 
     private static final String URL = "jdbc:mysql://localhost:3306/skydrop";
     private static final String USER = "root";
-    private static final String PASSWORD = "2244!mawadah";
+    private static final String PASSWORD = "";
 
     public static void createTables() {
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);

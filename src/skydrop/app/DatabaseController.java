@@ -10,7 +10,7 @@ public class DatabaseController {
     public void connect() {
         try {
             connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/skydrop", "root", "2244!mawadah"
+                    "jdbc:mysql://localhost:3306/skydrop", "root", ""
             );
             System.out.println("Database connected successfully.");
         } catch (SQLException e) {
