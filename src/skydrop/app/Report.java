@@ -1,146 +1,93 @@
 package skydrop.app;
+
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 
 public class Report {
-    private int totalOrders;
-    private int acceptedOrders;
-    private int rejectedOrders;
-    private int deliveredOrders;
-    private String droneSummary;
+
+    private DatabaseController db;
     private LocalDateTime generatedAt;
 
-    public Report() {
-        this.totalOrders = 0;
-        this.acceptedOrders = 0;
-        this.rejectedOrders = 0;
-        this.deliveredOrders = 0;
-        this.droneSummary = "";
+    public Report(DatabaseController db) {
+
+        // Store the database controller so the report can get its data from DB queries
+        this.db = db;
+
+        // Store the time when this report object was created
         this.generatedAt = LocalDateTime.now();
     }
 
-    public int getTotalOrders() {
-        return totalOrders;
-    }
+    // Generate structured report data for ReportScreen
+    public String generateReportResponse() {
 
-    public int getAcceptedOrders() {
-        return acceptedOrders;
-    }
+        int total = db.getTotalOrders();
+        int accepted = db.getAcceptedOrdersCount();
+        int rejected = db.getRejectedOrdersCount();
 
-    public int getRejectedOrders() {
-        return rejectedOrders;
-    }
+        ArrayList<Drone> drones = db.loadDrones();
 
-    public int getDeliveredOrders() {
-        return deliveredOrders;
-    }
+        StringBuilder response = new StringBuilder("REPORT|");
 
-    public String getDroneSummary() {
-        return droneSummary;
-    }
+        response.append(total)
+                .append("|")
+                .append(accepted)
+                .append("|")
+                .append(rejected)
+                .append("|")
+                .append(generatedAt)
+                .append("|");
 
-    public LocalDateTime getGeneratedAt() {
-        return generatedAt;
-    }
+        // Add drone data as: droneId,district,deliveredCount,queueCount
+        for (int i = 0; i < drones.size(); i++) {
 
-    public void generateReport(List<Order> orders, List<Drone> drones) {
-        reset();
-        for (Order order : orders) {
-            totalOrders++;
-            if (order.getStatus().equalsIgnoreCase("Accepted")
-                    || order.getStatus().equalsIgnoreCase("On the way")) {
-                acceptedOrders++;
-            }
-            if (order.getStatus().equalsIgnoreCase("Rejected")) {
-                rejectedOrders++;
-            }
-            if (order.getStatus().equalsIgnoreCase("Delivered")) {
-                deliveredOrders++;
-            }
-        }
-        buildDroneSummary(drones);
-        generatedAt = LocalDateTime.now();
-    }
+            Drone drone = drones.get(i);
 
-    public void generateReportByDrone(List<Order> orders, List<Drone> drones, int droneId) {
-        reset();
-        for (Order order : orders) {
-            if (order.getAssignedDroneId() != null && order.getAssignedDroneId() == droneId) {
-                totalOrders++;
-                if (order.getStatus().equalsIgnoreCase("Accepted")
-                        || order.getStatus().equalsIgnoreCase("On the way")) {
-                    acceptedOrders++;
-                }
-                if (order.getStatus().equalsIgnoreCase("Rejected")) {
-                    rejectedOrders++;
-                }
-                if (order.getStatus().equalsIgnoreCase("Delivered")) {
-                    deliveredOrders++;
-                }
+            response.append(drone.getDroneId())
+                    .append(",")
+                    .append(drone.getDistrict())
+                    .append(",")
+                    .append(drone.getDeliveredCount())
+                    .append(",")
+                    .append(drone.getQueueCount());
+
+            if (i < drones.size() - 1) {
+                response.append(";");
             }
         }
 
-        StringBuilder sb = new StringBuilder();
+        return response.toString();
+    }
+
+    // Generate a readable text report for saving as a TXT file
+    public String generateReportText() {
+
+        int total = db.getTotalOrders();
+        int accepted = db.getAcceptedOrdersCount();
+        int rejected = db.getRejectedOrdersCount();
+
+        ArrayList<Drone> drones = db.loadDrones();
+
+        StringBuilder text = new StringBuilder();
+
+        text.append("SkyDrop Delivery Report\n");
+        text.append("=======================\n");
+        text.append("Generated At: ").append(generatedAt).append("\n\n");
+
+        text.append("Total Orders: ").append(total).append("\n");
+        text.append("Accepted Orders: ").append(accepted).append("\n");
+        text.append("Rejected Orders: ").append(rejected).append("\n\n");
+
+        text.append("Drone Summary:\n");
+
         for (Drone drone : drones) {
-            if (drone.getDroneId() == droneId) {
-                sb.append("Drone ").append(drone.getDroneId())
-                        .append(" - District: ").append(drone.getDistrict())
-                        .append(" - Delivered: ").append(drone.getDeliveredCount())
-                        .append("\n");
-            }
-        }
-        droneSummary = sb.toString();
-        generatedAt = LocalDateTime.now();
-    }
 
-    public void generateReportByDateRange(List<Order> orders, List<Drone> drones,
-                                          LocalDateTime from, LocalDateTime to) {
-        reset();
-        for (Order order : orders) {
-            if ((order.getCreatedAt().isEqual(from) || order.getCreatedAt().isAfter(from))
-                    && (order.getCreatedAt().isEqual(to) || order.getCreatedAt().isBefore(to))) {
-                totalOrders++;
-                if (order.getStatus().equalsIgnoreCase("Accepted")
-                        || order.getStatus().equalsIgnoreCase("On the way")) {
-                    acceptedOrders++;
-                }
-                if (order.getStatus().equalsIgnoreCase("Rejected")) {
-                    rejectedOrders++;
-                }
-                if (order.getStatus().equalsIgnoreCase("Delivered")) {
-                    deliveredOrders++;
-                }
-            }
-        }
-        buildDroneSummary(drones);
-        generatedAt = LocalDateTime.now();
-    }
-
-    private void buildDroneSummary(List<Drone> drones) {
-        StringBuilder sb = new StringBuilder();
-        for (Drone drone : drones) {
-            sb.append("Drone ").append(drone.getDroneId())
-                    .append(" - District: ").append(drone.getDistrict())
-                    .append(" - Delivered: ").append(drone.getDeliveredCount())
+            text.append("Drone ").append(drone.getDroneId())
+                    .append(" | District: ").append(drone.getDistrict())
+                    .append(" | Delivered: ").append(drone.getDeliveredCount())
+                    .append(" | Queue: ").append(drone.getQueueCount())
                     .append("\n");
         }
-        droneSummary = sb.toString();
-    }
 
-    private void reset() {
-        totalOrders = 0;
-        acceptedOrders = 0;
-        rejectedOrders = 0;
-        deliveredOrders = 0;
-        droneSummary = "";
-    }
-
-    public String formatAsText() {
-        return "Generated At: " + generatedAt + "\n"
-                + "Total Orders: " + totalOrders + "\n"
-                + "Accepted Orders: " + acceptedOrders + "\n"
-                + "Rejected Orders: " + rejectedOrders + "\n"
-                + "Delivered Orders: " + deliveredOrders + "\n\n"
-                + droneSummary;
+        return text.toString();
     }
 }

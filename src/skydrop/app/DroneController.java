@@ -3,83 +3,30 @@ package skydrop.app;
 import java.util.ArrayList;
 
 public class DroneController {
+
     private ArrayList<Drone> drones;
 
     public DroneController(DatabaseController databaseController) {
+
+        // Load all drones from the database when the server starts
         this.drones = databaseController.loadDrones();
     }
 
+    // Return all drones so the DroneThreadManager can start one thread for each drone
     public ArrayList<Drone> getAllDrones() {
         return drones;
     }
 
+    // Find a drone by its ID from the runtime list
     public Drone findDroneById(int droneId) {
+
         for (Drone drone : drones) {
+
             if (drone.getDroneId() == droneId) {
                 return drone;
             }
         }
+
         return null;
-    }
-
-    public Drone findAvailableDrone(String district) {
-        for (Drone drone : drones) {
-            if (drone.getDistrict().equalsIgnoreCase(district)
-                    && drone.isAvailable()) {
-                return drone;
-            }
-        }
-        return null;
-    }
-
-    public Drone assignDroneToOrder(Order order) {
-
-        Drone drone = findAvailableDrone(order.getDistrict());
-
-        if (drone != null) {
-            drone.assignOrder(order.getOrderId());
-            drone.setStatus("Busy");
-            order.assignDrone(drone.getDroneId());
-        }
-
-        return drone;
-    }
-
-    public void finishDelivery(Order order) {
-
-        if (order.getAssignedDroneId() != null) {
-
-            Drone drone = findDroneById(
-                    order.getAssignedDroneId()
-            );
-
-            if (drone != null) {
-
-                drone.releaseOrder();
-
-                // Make drone available again
-                drone.setStatus("Idle");
-
-                drone.incrementDeliveredCount();
-            }
-
-            order.removeDrone();
-        }
-    }
-
-
-    public void refreshQueues(ArrayList<Order> orders) {
-        for (Drone drone : drones) {
-            int count = 0;
-
-            for (Order order : orders) {
-                if (order.getDistrict().equalsIgnoreCase(drone.getDistrict())
-                        && order.getStatus().equalsIgnoreCase("Waiting")) {
-                    count++;
-                }
-            }
-
-            drone.setQueueCount(count);
-        }
     }
 }

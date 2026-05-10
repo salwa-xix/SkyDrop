@@ -16,19 +16,20 @@ public class SkyDropServer {
         db.connect();
 
         db.insertInitialDrones();
-        db.insertDemoUsers();
 
-        OrderController orderController = new OrderController();
+        OrderController orderController = new OrderController(db);
         DroneController droneController = new DroneController(db);
         FileController fileController = new FileController();
+        WeatherController weatherController =
+                new WeatherController();
 
         DroneThreadManager droneThreadManager = new DroneThreadManager();
 
         droneThreadManager.startDroneThreads(
                 droneController.getAllDrones(),
                 orderController,
-                droneController,
                 db,
+                weatherController,
                 fileController
         );
 
@@ -37,13 +38,13 @@ public class SkyDropServer {
             System.out.println("SkyDrop Server is running on port " + PORT);
 
             while (true) {
-
                 Socket clientSocket = server.accept();
 
                 ClientHandler handler = new ClientHandler(
                         clientSocket,
                         db,
-                        orderController
+                        orderController,
+                        fileController
                 );
 
                 handler.start();

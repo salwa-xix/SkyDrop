@@ -1,20 +1,41 @@
 package skydrop.app;
 
-    //later for API and Network
+import java.util.Random;
 
-    public class WeatherController {
+// Temporary weather simulation until real API integration
+public class WeatherController {
 
-        public boolean isWeatherSuitable(String district) {
-            String condition = getWeatherCondition(district);
-            return !condition.equalsIgnoreCase("Storm")
-                    && !condition.equalsIgnoreCase("Heavy Wind")
-                    && !condition.equalsIgnoreCase("Rain");
-        }
+    private Random random;
 
-        public String getWeatherCondition(String district) {
-            // Placeholder
-            //later for API and Network
-            return "Clear";
-        }
+    public WeatherController() {
+
+        // Used to simulate changing weather conditions
+        random = new Random();
     }
 
+    // Check if the weather allows drone delivery
+    public boolean isWeatherSuitable(String district) {
+
+        String condition = getWeatherCondition(district);
+
+        return !condition.equalsIgnoreCase("Storm")
+                && !condition.equalsIgnoreCase("Heavy Wind")
+                && !condition.equalsIgnoreCase("Rain");
+    }
+
+    // Simulate weather conditions for demo purposes
+    public String getWeatherCondition(String district) {
+
+        String[] conditions = {
+                "Clear",
+                "Clear",
+                "Clear",
+                "Clear",
+                "Clear"
+        };
+
+        int index = random.nextInt(conditions.length);
+
+        return conditions[index];
+    }
+}

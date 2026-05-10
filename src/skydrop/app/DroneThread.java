@@ -4,27 +4,28 @@ public class DroneThread extends Thread {
 
     private Drone drone;
     private OrderController orderController;
-    private DroneController droneController;
     private DatabaseController databaseController;
+    private WeatherController weatherController;
     private FileController fileController;
     private boolean running = true;
 
     public DroneThread(Drone drone,
                        OrderController orderController,
-                       DroneController droneController,
                        DatabaseController databaseController,
+                       WeatherController weatherController,
                        FileController fileController) {
 
         this.drone = drone;
         this.orderController = orderController;
-        this.droneController = droneController;
         this.databaseController = databaseController;
+        this.weatherController = weatherController;
         this.fileController = fileController;
     }
 
     @Override
     public void run() {
 
+        // Log thread startup
         fileController.writeLog(
                 "Drone " + drone.getDroneId() + " thread started."
         );
@@ -33,23 +34,26 @@ public class DroneThread extends Thread {
 
             try {
 
+                // Check if the drone is available to handle a new order
                 if (drone.isAvailable()) {
 
-                    Integer orderId = databaseController.tryClaimNextWaitingOrder(
-                            drone.getDroneId(),
-                            drone.getDistrict()
-                    );
+                    Integer orderId =
+                            databaseController.getNextWaitingOrderId(
+                                    drone.getDistrict()
+                            );
 
                     if (orderId != null) {
-                        deliverOrder(orderId);
+                        processOrder(orderId);
                     }
                 }
 
+                // Wait before checking for another waiting order
                 Thread.sleep(1000);
 
             } catch (InterruptedException e) {
 
                 running = false;
+
                 fileController.writeLog(
                         "Drone " + drone.getDroneId() + " thread stopped."
                 );
@@ -61,20 +65,48 @@ public class DroneThread extends Thread {
                                 + " error: "
                                 + e.getMessage()
                 );
+
+                System.out.println(
+                        "Drone " + drone.getDroneId()
+                                + " error: "
+                                + e.getMessage()
+                );
             }
         }
     }
 
-    private void deliverOrder(int orderId) throws InterruptedException {
+    private void processOrder(int orderId) throws InterruptedException {
 
-        drone.assignOrder(orderId);
+        // Check weather before accepting the order
+        boolean weatherSuitable =
+                weatherController.isWeatherSuitable(drone.getDistrict());
 
-        Order order = orderController.findOrderById(orderId);
+        // Reject the order if weather is unsafe
+        if (!weatherSuitable) {
 
-        if (order != null) {
-            order.assignDrone(drone.getDroneId());
-            order.updateStatus("Accepted");
+            databaseController.updateOrderStatus(orderId, "Rejected");
+
+            // Update queue count after removing the waiting order
+            databaseController.updateQueueCountForDistrict(
+                    drone.getDistrict()
+            );
+
+            fileController.writeLog(
+                    "Order " + orderId
+                            + " rejected because of bad weather"
+            );
+
+            return;
         }
+
+        // Assign the order to the drone
+        databaseController.assignOrderToDrone(
+                orderId,
+                drone.getDroneId()
+        );
+
+        // Mark the order as accepted
+        databaseController.updateOrderStatus(orderId, "Accepted");
 
         fileController.writeLog(
                 "Drone " + drone.getDroneId()
@@ -82,41 +114,76 @@ public class DroneThread extends Thread {
                         + orderId
         );
 
-        Thread.sleep(10000);
+        // Mark the drone as busy in the database
+        databaseController.markDroneBusy(
+                drone.getDroneId(),
+                orderId
+        );
 
-        databaseController.updateOrderStatus(orderId, "On the way");
+        // Update runtime drone object
+        drone.assignOrder(orderId);
+
+        // Update runtime order object if it exists
+        Order order = orderController.findOrderById(orderId);
 
         if (order != null) {
-            order.updateStatus("On the way");
+
+            order.assignDrone(drone.getDroneId());
+            order.updateStatus("Accepted");
         }
+
+        // Update queue count after removing the waiting order
+        databaseController.updateQueueCountForDistrict(
+                drone.getDistrict()
+        );
+
+        // Simulate preparing the delivery
+        Thread.sleep(10000);
+
+        // Update order status to on the way
+        databaseController.updateOrderStatus(orderId, "On the way");
 
         fileController.writeLog(
                 "Order " + orderId + " is on the way"
         );
 
-        Thread.sleep(10000);
-
-        databaseController.updateOrderStatus(orderId, "Delivered");
-
         if (order != null) {
-            order.updateStatus("Delivered");
+            order.updateStatus("On the way");
         }
 
-        databaseController.releaseDrone(drone.getDroneId());
+        // Simulate delivery time
+        Thread.sleep(10000);
 
-        drone.releaseOrder();
-        drone.incrementDeliveredCount();
-
-        droneController.refreshQueues(orderController.getAllOrders());
+        // Mark the order as delivered
+        databaseController.updateOrderStatus(orderId, "Delivered");
 
         fileController.writeLog(
                 "Order " + orderId
                         + " delivered by Drone "
                         + drone.getDroneId()
         );
+
+        if (order != null) {
+            order.updateStatus("Delivered");
+        }
+
+        // Increase delivered count in the database
+        databaseController.incrementDroneDeliveredCount(
+                drone.getDroneId()
+        );
+
+        // Mark drone as idle in the database
+        databaseController.markDroneIdle(
+                drone.getDroneId()
+        );
+
+        // Update runtime drone object
+        drone.releaseOrder();
+        drone.incrementDeliveredCount();
     }
 
     public void stopDrone() {
+
         running = false;
         this.interrupt();
     }

@@ -3,6 +3,7 @@ package skydrop.app;
 import java.time.LocalDateTime;
 
 public class Order {
+
     private int orderId;
     private String userPhone;
     private String placeType;
@@ -16,12 +17,15 @@ public class Order {
 
     public Order(int orderId, String userPhone, String placeType, String placeName,
                  String itemName, String district) {
+
         this.orderId = orderId;
         this.userPhone = userPhone;
         this.placeType = placeType;
         this.placeName = placeName;
         this.itemName = itemName;
         this.district = district;
+
+        // New orders always start as waiting until a drone handles them
         this.status = "Waiting";
         this.rating = 0;
         this.assignedDroneId = null;
@@ -72,34 +76,22 @@ public class Order {
         return createdAt;
     }
 
-    public void setPlaceType(String placeType) {
-        this.placeType = placeType;
-    }
-
-    public void setPlaceName(String placeName) {
-        this.placeName = placeName;
-    }
-
-    public void setItemName(String itemName) {
-        this.itemName = itemName;
-    }
-
-    public void setDistrict(String district) {
-        this.district = district;
-    }
-
+    // Update the order status during the delivery process
     public void updateStatus(String status) {
         this.status = status;
     }
 
+    // Assign a drone to this order
     public void assignDrone(int droneId) {
         this.assignedDroneId = droneId;
     }
 
+    // Remove the assigned drone when the delivery is finished
     public void removeDrone() {
         this.assignedDroneId = null;
     }
 
+    // Save the user's rating after delivery
     public void addRating(int rating) {
         this.rating = rating;
     }

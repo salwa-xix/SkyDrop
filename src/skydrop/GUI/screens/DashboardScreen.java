@@ -1,12 +1,14 @@
 package skydrop.GUI.screens;
 
-import skydrop.GUI.components.*;
+import skydrop.GUI.components.BaseScreen;
+import skydrop.GUI.components.InfoCard;
+import skydrop.GUI.components.RoundedButton;
 import skydrop.app.SkyDropClient;
-
-import static skydrop.GUI.components.Label.createLabel;
 
 import javax.swing.*;
 import java.awt.*;
+
+import static skydrop.GUI.components.Label.createLabel;
 
 public class DashboardScreen extends JFrame {
 
@@ -14,21 +16,26 @@ public class DashboardScreen extends JFrame {
     private static final int H = 812;
 
     private BaseScreen root;
+    private Timer timer;
 
     public DashboardScreen() {
 
-        setTitle("SkyDrop - Dashboard (Employee)");
+        // Setup the frame
+        setTitle("SkyDrop - Dashboard");
         setSize(W, H);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
+        // Create the main screen with background
         root = new BaseScreen(getClass());
         setContentPane(root);
 
+        // Load dashboard for the first time
         refreshDashboard();
 
-        Timer timer = new Timer(1000, e -> refreshDashboard());
+        // Refresh dashboard every second
+        timer = new Timer(1000, e -> refreshDashboard());
         timer.start();
 
         setVisible(true);
@@ -36,6 +43,7 @@ public class DashboardScreen extends JFrame {
 
     private void refreshDashboard() {
 
+        // Clear old cards before drawing updated data
         root.removeAll();
 
         JLabel title = createLabel("Drone Dashboard", 0, 175, W, 28,
@@ -44,8 +52,10 @@ public class DashboardScreen extends JFrame {
                 SwingConstants.CENTER);
         root.add(title);
 
+        // Load drones from backend
         loadDroneCards();
 
+        // Add report button at the bottom
         addReportButton();
 
         root.revalidate();
@@ -54,15 +64,27 @@ public class DashboardScreen extends JFrame {
 
     private void loadDroneCards() {
 
+        // Ask server for drones data
         String response = SkyDropClient.sendRequest("GET_DRONES");
 
-        if (response == null || !response.startsWith("DRONES|")) {
+        if (response == null) {
+            showMessage("Cannot connect to server.");
+            return;
+        }
+
+        /*
+         Expected format:
+         DRONES|droneId,district,status,currentOrder,queue;droneId,district,status,currentOrder,queue
+        */
+        if (!response.startsWith("DRONES|")) {
+            showMessage("Invalid server response.");
             return;
         }
 
         String data = response.substring("DRONES|".length());
 
-        if (data.isEmpty()) {
+        if (data.trim().isEmpty()) {
+            showMessage("No drones available.");
             return;
         }
 
@@ -76,25 +98,36 @@ public class DashboardScreen extends JFrame {
 
         for (int i = 0; i < drones.length; i++) {
 
-            String[] parts = drones[i].split(",");
+            String[] parts = drones[i].split(",", -1);
 
-            int droneId = Integer.parseInt(parts[0]);
+            // Skip invalid drone records
+            if (parts.length < 5) {
+                continue;
+            }
+
+            String droneId = parts[0];
             String district = parts[1];
             String status = parts[2];
-            String assigned = parts[3];
-            String queue = parts[4];
+            String assignedOrder = parts[3];
+            String queueCount = parts[4];
 
             InfoCard card = new InfoCard(18);
             card.setBounds(cardX, startY + i * (cardH + gap), cardW, cardH);
+            card.setLayout(null);
 
-            String droneName = String.format("DR-%02d", droneId);
+            String droneName = "DR-" + droneId;
 
             card.addTitle(droneName, 14, 10, 200, 22);
             card.addSubtitle("District: " + district, 14, 32, 250, 18);
 
-            card.addInfoRow("Assigned:", assigned, 14, 90, 100, 240, 60);
-            card.addInfoRow("Status:", status, 14, 90, 100, 240, 83);
-            card.addInfoRow("Queue:", queue, 14, 90, 100, 240, 106);
+            card.addInfoRow("Assigned:", assignedOrder,
+                    14, 90, 100, 200, 60);
+
+            card.addInfoRow("Status:", status,
+                    14, 90, 100, 200, 83);
+
+            card.addInfoRow("Queue:", queueCount,
+                    14, 90, 100, 200, 106);
 
             root.add(card);
         }
@@ -105,30 +138,36 @@ public class DashboardScreen extends JFrame {
         RoundedButton reportButton = new RoundedButton("Report", 18);
         reportButton.setBounds((W - 160) / 2, H - 95, 160, 48);
 
+        // Style the button
         reportButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         reportButton.setBackground(Color.WHITE);
         reportButton.setForeground(Color.BLACK);
-
         reportButton.enableHover(Color.WHITE, Color.decode("#0092D9"));
 
-        reportButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                reportButton.setForeground(Color.WHITE);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                reportButton.setForeground(Color.BLACK);
-            }
-        });
-
+        // Open report screen
         reportButton.addActionListener(e -> {
+
+            // Stop timer before leaving this screen
+            if (timer != null) {
+                timer.stop();
+            }
+
             ReportScreen screen = new ReportScreen();
             screen.setLocation(this.getLocation());
             dispose();
         });
 
         root.add(reportButton);
+    }
+
+    private void showMessage(String message) {
+
+        // Show simple message when dashboard data cannot be loaded
+        JLabel label = createLabel(message, 0, 330, W, 25,
+                new Font("SansSerif", Font.PLAIN, 14),
+                Color.WHITE,
+                SwingConstants.CENTER);
+
+        root.add(label);
     }
 }

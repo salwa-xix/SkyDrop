@@ -7,12 +7,25 @@ import java.sql.Statement;
 
 public class CreateDataBase {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/skydrop";
+    private static final String SERVER_URL = "jdbc:mysql://localhost:3306/";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/skydrop";
     private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "123321";
 
     public static void createTables() {
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+
+        try (Connection connection = DriverManager.getConnection(SERVER_URL, USER, PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS skydrop");
+            System.out.println("Database created successfully.");
+
+        } catch (SQLException e) {
+            System.out.println("Error creating database: " + e.getMessage());
+            return;
+        }
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, USER, PASSWORD);
              Statement statement = connection.createStatement()) {
 
             String createUsersTable = """
@@ -42,15 +55,15 @@ public class CreateDataBase {
                 """;
 
             String createDronesTable = """
-    CREATE TABLE IF NOT EXISTS drones (
-        drone_id INT PRIMARY KEY,
-        district VARCHAR(100) NOT NULL,
-        status VARCHAR(50) NOT NULL DEFAULT 'Idle',
-        current_order_id INT NULL,
-        delivered_count INT DEFAULT 0,
-        queue_count INT DEFAULT 0
-    )
-    """;
+                CREATE TABLE IF NOT EXISTS drones (
+                    drone_id INT PRIMARY KEY,
+                    district VARCHAR(100) NOT NULL,
+                    status VARCHAR(50) NOT NULL DEFAULT 'Idle',
+                    current_order_id INT NULL,
+                    delivered_count INT DEFAULT 0,
+                    queue_count INT DEFAULT 0
+                )
+                """;
 
             statement.executeUpdate(createUsersTable);
             statement.executeUpdate(createOrdersTable);

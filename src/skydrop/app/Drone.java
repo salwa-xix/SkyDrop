@@ -1,6 +1,7 @@
 package skydrop.app;
 
 public class Drone {
+
     private int droneId;
     private String district;
     private String status;
@@ -9,6 +10,7 @@ public class Drone {
     private int queueCount;
 
     public Drone(int droneId, String district) {
+
         this.droneId = droneId;
         this.district = district;
         this.status = "Idle";
@@ -41,37 +43,47 @@ public class Drone {
         return queueCount;
     }
 
+    // Update the current drone status
     public void setStatus(String status) {
         this.status = status;
     }
 
+    // Set the current assigned order ID
     public void setCurrentOrderId(Integer currentOrderId) {
         this.currentOrderId = currentOrderId;
     }
 
+    // Update delivered orders count manually if needed
     public void setDeliveredCount(int deliveredCount) {
         this.deliveredCount = deliveredCount;
     }
 
-    public void setQueueCount(int queueCount) {
-        this.queueCount = queueCount;
-    }
-
+    // Check if the drone is free to accept a new order
     public boolean isAvailable() {
         return status.equalsIgnoreCase("Idle");
     }
 
+    // Assign a new order to this drone
     public void assignOrder(int orderId) {
+
         this.currentOrderId = orderId;
         this.status = "Busy";
     }
 
+    // Release the current order after delivery is completed
     public void releaseOrder() {
+
         this.currentOrderId = null;
         this.status = "Idle";
     }
 
+    // Increase the successful delivery count
     public void incrementDeliveredCount() {
         this.deliveredCount++;
+    }
+
+    // Update the number of waiting orders for this drone
+    public void setQueueCount(int queueCount) {
+        this.queueCount = queueCount;
     }
 }

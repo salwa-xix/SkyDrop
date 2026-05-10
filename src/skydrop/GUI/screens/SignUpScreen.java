@@ -1,6 +1,7 @@
 package skydrop.GUI.screens;
 
 import skydrop.GUI.components.*;
+import skydrop.app.SkyDropClient;
 import skydrop.app.User;
 
 import static skydrop.GUI.components.Label.createLabel;
@@ -11,36 +12,34 @@ import java.awt.KeyboardFocusManager;
 
 public class SignUpScreen extends JFrame {
 
-    // Screen size
     private static final int W = 375, H = 812;
 
     public SignUpScreen() {
 
-        // Frame setup
+        // Setup the frame
         setTitle("SkyDrop - Sign Up");
         setSize(W, H);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        // Root screen (background + logo)
+        // Create the main screen with background and logo
         BaseScreen root = new BaseScreen(getClass());
         setContentPane(root);
 
-        // Layout values
         int cw = 295, ch = 50, x = (W - cw) / 2, y = 240, g = 20;
 
-        // Create name input field with rounded style and placeholder support
+        // Name field
         RoundedInputField nameField = new RoundedInputField("Name", 18, false);
         nameField.setBounds(x, y, cw, ch);
         root.add(nameField);
 
-        // Create phone number input field
+        // Phone field
         RoundedInputField phoneField = new RoundedInputField("Phone Number", 18, false);
         phoneField.setBounds(x, y + (ch + g), cw, ch);
         root.add(phoneField);
 
-        // Create district dropdown
+        // District dropdown
         String[] jeddahDistricts = {
                 "Your District",
                 "Al Rawdah",
@@ -54,12 +53,11 @@ public class SignUpScreen extends JFrame {
         districtBox.setBounds(x, y + 2 * (ch + g), cw, ch);
         root.add(districtBox);
 
-        // Create password input field with masking enabled
+        // Password field
         RoundedInputField passField = new RoundedInputField("Password", 18, true);
         passField.setBounds(x, y + 3 * (ch + g), cw, ch);
         root.add(passField);
 
-        // Create and center the Sign Up button
         int bw = cw / 2, bh = 55, bx = (W - bw) / 2, by = y + 4 * (ch + g) + 20;
 
         RoundedButton signUpButton = new RoundedButton("Sign Up", 18);
@@ -67,7 +65,6 @@ public class SignUpScreen extends JFrame {
         signUpButton.setFont(new Font("SansSerif", Font.BOLD, 16));
         root.add(signUpButton);
 
-        // Define normal and active button colors
         Color normalBg = Color.WHITE;
         Color normalFg = Color.BLACK;
         Color activeBg = Color.decode("#0092D9");
@@ -76,7 +73,7 @@ public class SignUpScreen extends JFrame {
         signUpButton.setBackground(normalBg);
         signUpButton.setForeground(normalFg);
 
-        // Update button appearance only when all fields are valid
+        // Change button color when all inputs are filled
         Runnable updateButtonState = () -> {
             String name = nameField.getText().trim();
             String phone = phoneField.getText().trim();
@@ -97,7 +94,7 @@ public class SignUpScreen extends JFrame {
             }
         };
 
-        // Attach listeners to detect text changes and refresh button state
+        // Listen to text changes
         javax.swing.event.DocumentListener dl = new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { updateButtonState.run(); }
@@ -107,42 +104,45 @@ public class SignUpScreen extends JFrame {
         nameField.getDocument().addDocumentListener(dl);
         phoneField.getDocument().addDocumentListener(dl);
         passField.getDocument().addDocumentListener(dl);
-
         districtBox.addActionListener(e -> updateButtonState.run());
 
-        // Create centered "or" label using reusable Label component
         root.add(createLabel("or", 0, by + bh + 18, W, 20,
                 new Font("SansSerif", Font.PLAIN, 14),
                 Color.WHITE, SwingConstants.CENTER));
 
-        // Create clickable "Sign in" label that opens the SignInPage
         JLabel signInLabel = createLabel("<html><u>Sign in</u></html>", 0, by + bh + 43, W, 25,
                 new Font("SansSerif", Font.BOLD, 14),
                 Color.WHITE, SwingConstants.CENTER);
+
         signInLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         root.add(signInLabel);
 
+        // Open Sign In screen
         signInLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseClicked(java.awt.event.MouseEvent e) {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
                 SignInScreen screen = new SignInScreen();
                 screen.setLocation(SignUpScreen.this.getLocation());
                 dispose();
             }
         });
 
-        // Handle Sign Up button action and basic validation
+        // Send sign up request to the backend
         signUpButton.addActionListener(e -> {
+
             String name = nameField.getText().trim();
             String phone = phoneField.getText().trim();
             String pass = passField.getText().trim();
             String district = (String) districtBox.getSelectedItem();
 
+            // Remove placeholder values
             if (nameField.isPlaceholderActive()) name = "";
             if (phoneField.isPlaceholderActive()) phone = "";
             if (passField.isPlaceholderActive()) pass = "";
 
             boolean districtValid = district != null && !district.equals("Your District");
 
+            // Validate required fields
             if (name.isEmpty() || phone.isEmpty() || pass.isEmpty() || !districtValid) {
                 JOptionPane.showMessageDialog(this,
                         "Please fill all fields and select your district.",
@@ -151,35 +151,64 @@ public class SignUpScreen extends JFrame {
                 return;
             }
 
-            try {
+            // Prevent breaking the request format
+            if (name.contains("|") || phone.contains("|") || pass.contains("|") || district.contains("|")) {
+                JOptionPane.showMessageDialog(this,
+                        "Please do not use the | symbol.",
+                        "Invalid Input",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-                User user = new User(
-                        name,
-                        phone,
-                        pass,
-                        district
-                );
+            // Build the request using the format expected by ClientHandler
+            String request = "SIGNUP|" + name + "|" + phone + "|" + pass + "|" + district;
+
+            // Send the request to SkyDropServer through SkyDropClient
+            String response = SkyDropClient.sendRequest(request);
+
+            // Server is not running or connection failed
+            if (response == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Cannot connect to the server.\nPlease run SkyDropServer first.",
+                        "Connection Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Account created successfully
+            if (response.equals("SIGNUP_SUCCESS")) {
+
+                User user = new User(name, phone, pass, district);
+
+                JOptionPane.showMessageDialog(this,
+                        "Account created successfully!");
 
                 OrderTestScreen screen = new OrderTestScreen(user);
                 screen.setLocation(SignUpScreen.this.getLocation());
                 dispose();
 
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            }
+            // Phone number already exists in database
+            else if (response.equals("USER_EXISTS")) {
                 JOptionPane.showMessageDialog(this,
-                        "Order screen failed to open:\n"
-                                + ex.getClass().getSimpleName() + " - " + ex.getMessage(),
+                        "This phone number is already registered.",
+                        "Sign Up Failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            // Any unexpected response from server
+            else {
+                JOptionPane.showMessageDialog(this,
+                        "Sign up failed.\nServer response: " + response,
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Allow pressing Enter to trigger the Sign Up button
         getRootPane().setDefaultButton(signUpButton);
 
         setVisible(true);
 
-        // Clear initial focus so no field appears auto-selected on startup
+        // Remove focus from fields when screen opens
         SwingUtilities.invokeLater(() -> {
             root.requestFocusInWindow();
             KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
