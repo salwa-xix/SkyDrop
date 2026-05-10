@@ -4,7 +4,6 @@ import skydrop.GUI.components.BaseScreen;
 import skydrop.GUI.components.InfoCard;
 import skydrop.GUI.components.RoundedButton;
 import skydrop.app.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.LinkedHashMap;
@@ -13,14 +12,14 @@ import java.util.Random;
 
 import static skydrop.GUI.components.Label.createLabel;
 
-public class OrderTestScreen extends JFrame {
+public class CreateOrderScreen extends JFrame {
 
     // Screen size
     private static final int W = 375, H = 812;
 
     // Button colors
     private static final Color BTN_NORMAL = Color.WHITE;
-    private static final Color BTN_HOVER  = Color.decode("#0092D9");
+    private static final Color BTN_HOVER = Color.decode("#0092D9");
 
     // Demo data (type -> places -> items)
     private final Map<String, String[]> restaurants = new LinkedHashMap<>() {{
@@ -34,7 +33,7 @@ public class OrderTestScreen extends JFrame {
 
     private User currentUser;
 
-    public OrderTestScreen(User user) {
+    public CreateOrderScreen(User user) {
 
         this.currentUser = user;
         // Frame setup
@@ -62,14 +61,16 @@ public class OrderTestScreen extends JFrame {
         int cw = 320, ch = 78, x = (W - cw) / 2, y = 250, g = 14;
 
         // Dropdowns (place/item start disabled)
-        JComboBox<String> type  = box("Choose place type", "Restaurant", "Cafe");
-        JComboBox<String> place = box("Choose place"); place.setEnabled(false);
-        JComboBox<String> item  = box("Choose item");  item.setEnabled(false);
+        JComboBox<String> type = box("Choose place type", "Restaurant", "Cafe");
+        JComboBox<String> place = box("Choose place");
+        place.setEnabled(false);
+        JComboBox<String> item = box("Choose item");
+        item.setEnabled(false);
 
         // Cards that hold dropdowns
-        root.add(card("Type",  x, y, cw, ch, type));
+        root.add(card("Type", x, y, cw, ch, type));
         root.add(card("Place", x, y + (ch + g), cw, ch, place));
-        root.add(card("Item",  x, y + 2 * (ch + g), cw, ch, item));
+        root.add(card("Item", x, y + 2 * (ch + g), cw, ch, item));
 
         // Submit button (disabled until all selections are done)
         RoundedButton submit = new RoundedButton("Submit", 18);
@@ -81,12 +82,15 @@ public class OrderTestScreen extends JFrame {
 
         // Hover effect (only when enabled)
         submit.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e){
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
                 if (!submit.isEnabled()) return;
                 submit.setBackground(BTN_HOVER);
                 submit.setForeground(Color.WHITE);
             }
-            @Override public void mouseExited(java.awt.event.MouseEvent e){
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
                 if (!submit.isEnabled()) return;
                 submit.setBackground(BTN_NORMAL);
                 submit.setForeground(Color.BLACK);
@@ -97,12 +101,19 @@ public class OrderTestScreen extends JFrame {
 
         // When type changes: reset place + item, then enable place
         type.addActionListener(e -> {
-            set(place, "Choose place"); place.setEnabled(false);
-            set(item,  "Choose item");  item.setEnabled(false);
+            set(place, "Choose place");
+            place.setEnabled(false);
+            set(item, "Choose item");
+            item.setEnabled(false);
 
             String t = (String) type.getSelectedItem();
-            if ("Restaurant".equals(t)) { set(place, list(restaurants)); place.setEnabled(true); }
-            else if ("Cafe".equals(t))  { set(place, list(cafes));       place.setEnabled(true); }
+            if ("Restaurant".equals(t)) {
+                set(place, list(restaurants));
+                place.setEnabled(true);
+            } else if ("Cafe".equals(t)) {
+                set(place, list(cafes));
+                place.setEnabled(true);
+            }
 
             // Update submit button state
             updateSubmit(submit, type, place, item);
@@ -110,7 +121,8 @@ public class OrderTestScreen extends JFrame {
 
         // When place changes: reset item, then enable item
         place.addActionListener(e -> {
-            set(item, "Choose item"); item.setEnabled(false);
+            set(item, "Choose item");
+            item.setEnabled(false);
 
             String t = (String) type.getSelectedItem();
             String p = (String) place.getSelectedItem();
@@ -120,7 +132,10 @@ public class OrderTestScreen extends JFrame {
             }
 
             String[] items = "Restaurant".equals(t) ? restaurants.get(p) : cafes.get(p);
-            if (items != null) { set(item, list(items)); item.setEnabled(true); }
+            if (items != null) {
+                set(item, list(items));
+                item.setEnabled(true);
+            }
 
             // Update submit button state
             updateSubmit(submit, type, place, item);
@@ -131,8 +146,8 @@ public class OrderTestScreen extends JFrame {
 
         // Submit: validate selections then open status screen
         submit.addActionListener(e -> {
-            String t  = (String) type.getSelectedItem();
-            String p  = (String) place.getSelectedItem();
+            String t = (String) type.getSelectedItem();
+            String p = (String) place.getSelectedItem();
             String it = (String) item.getSelectedItem();
 
             if (bad(t) || bad(p) || bad(it)) {
@@ -159,8 +174,7 @@ public class OrderTestScreen extends JFrame {
 
                 int orderId = Integer.parseInt(parts[1]);
 
-                OrderStatusScreen screen =
-                        new OrderStatusScreen(orderId, t, p, it, currentUser);
+                OrderStatusScreen screen = new OrderStatusScreen(currentUser, orderId);
 
                 screen.setLocation(this.getLocation());
                 dispose();
@@ -195,7 +209,9 @@ public class OrderTestScreen extends JFrame {
     }
 
     // Small check for default choices
-    private boolean bad(String s) { return s == null || s.startsWith("Choose"); }
+    private boolean bad(String s) {
+        return s == null || s.startsWith("Choose");
+    }
 
     // Create a simple combo box style
     private JComboBox<String> box(String... items) {
@@ -217,7 +233,7 @@ public class OrderTestScreen extends JFrame {
         return c;
     }
 
-    // Replace combo items 
+    // Replace combo items
     private void set(JComboBox<String> b, String first) {
         b.setModel(new DefaultComboBoxModel<>(new String[]{first}));
     }
