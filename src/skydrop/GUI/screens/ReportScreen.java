@@ -91,8 +91,7 @@ public class ReportScreen extends JFrame {
          Expected format:
          REPORT|totalOrders|acceptedOrders|rejectedOrders|deliveredOrders|droneData
 
-         droneData format:
-         droneId,district,deliveredCount;droneId,district,deliveredCount
+         We will ignore deliveredOrders in parts[4].
         */
         String[] parts = response.split("\\|", -1);
 
@@ -103,7 +102,7 @@ public class ReportScreen extends JFrame {
             return;
         }
 
-        // Display report summary
+        // Display report summary without Delivered Orders
         card.addInfoRow("Total Orders", parts[1],
                 18, 170, 190, cardW - 208, 20);
 
@@ -113,16 +112,14 @@ public class ReportScreen extends JFrame {
         card.addInfoRow("Rejected Orders", parts[3],
                 18, 170, 190, cardW - 208, 120);
 
-        card.addInfoRow("Delivered Orders", parts[4],
-                18, 170, 190, cardW - 208, 170);
-
-        card.addTitle("Drones", 18, 225, cardW - 36, 18);
+        // Keep Drones section, but move it up after removing Delivered Orders
+        card.addTitle("Drones", 18, 175, cardW - 36, 18);
 
         String droneData = parts[5];
 
         if (droneData == null || droneData.trim().isEmpty()) {
             card.addLines(new String[]{"No drone data available."},
-                    18, 255, cardW - 36, 18,
+                    18, 205, cardW - 36, 18,
                     new Font("SansSerif", Font.PLAIN, 13),
                     Color.DARK_GRAY);
             return;
@@ -148,7 +145,7 @@ public class ReportScreen extends JFrame {
 
         if (idx == 0) {
             card.addLines(new String[]{"Invalid drone data."},
-                    18, 255, cardW - 36, 18,
+                    18, 205, cardW - 36, 18,
                     new Font("SansSerif", Font.PLAIN, 13),
                     Color.DARK_GRAY);
             return;
@@ -159,7 +156,7 @@ public class ReportScreen extends JFrame {
         System.arraycopy(lines, 0, finalLines, 0, idx);
 
         card.addLines(finalLines,
-                18, 255, cardW - 36, 18,
+                18, 205, cardW - 36, 18,
                 new Font("SansSerif", Font.PLAIN, 12),
                 Color.DARK_GRAY);
     }

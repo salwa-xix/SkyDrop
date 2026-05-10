@@ -1,0 +1,157 @@
+Drone 3 thread started.
+Drone 2 thread started.
+Drone 1 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+New user registered: 03
+New user registered: 04
+Login success for user phone: 05
+Order 8 created for user 05 in district Al Rawdah
+Order 8 rejected بسبب bad weather
+Order 9 created for user 05 in district Al Rawdah
+Order 9 rejected بسبب bad weather
+Order 10 created for user 05 in district Al Rawdah
+Order 10 rejected بسبب bad weather
+Order 11 created for user 05 in district Al Rawdah
+Drone 1 accepted order 11
+Order 11 is on the way
+Order 11 delivered by Drone 1
+Rating 3 saved for order 11
+Order 12 created for user 05 in district Al Rawdah
+Drone 1 accepted order 12
+Order 12 is on the way
+Order 12 delivered by Drone 1
+Rating 3 saved for order 12
+Order 13 created for user 03 in district Al Safa
+Order 14 created for user 04 in district Al Safa
+Order 15 created for user 05 in district Al Rawdah
+Drone 1 accepted order 15
+Order 15 is on the way
+Order 15 delivered by Drone 1
+Drone 2 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Login success for user phone: 22
+Login success for user phone: 11
+Order 16 created for user 22 in district Al Rawdah
+Order 16 rejected بسبب bad weather
+Order 17 created for user 22 in district Al Rawdah
+Drone 1 accepted order 17
+Order 18 created for user 11 in district Al Rawdah
+Order 17 is on the way
+Order 17 delivered by Drone 1
+Drone 1 accepted order 18
+Order 18 is on the way
+Order 18 delivered by Drone 1
+Rating 5 saved for order 18
+Rating 5 saved for order 17
+Login success for user phone: 22
+Login success for user phone: 11
+Order 19 created for user 11 in district Al Rawdah
+Order 20 created for user 22 in district Al Rawdah
+Order 19 rejected بسبب bad weather
+Drone 1 accepted order 20
+Order 20 is on the way
+Order 20 delivered by Drone 1
+Rating 3 saved for order 20
+Order 21 created for user 22 in district Al Rawdah
+Order 22 created for user 11 in district Al Rawdah
+Order 21 rejected بسبب bad weather
+Order 22 rejected بسبب bad weather
+Order 23 created for user 11 in district Al Rawdah
+Order 23 rejected بسبب bad weather
+Order 24 created for user 22 in district Al Rawdah
+Order 24 rejected بسبب bad weather
+Login success for user phone: 22
+Login success for user phone: 11
+Order 25 created for user 11 in district Al Rawdah
+Order 26 created for user 22 in district Al Rawdah
+Drone 1 accepted order 25
+Order 25 is on the way
+Order 25 delivered by Drone 1
+Order 26 rejected بسبب bad weather
+Rating 3 saved for order 25
+Drone 1 thread started.
+Drone 3 thread started.
+Drone 2 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Login success for user phone: 11
+Login success for user phone: 22
+Order 27 created for user 22 in district Al Rawdah
+Order 28 created for user 11 in district Al Rawdah
+Drone 1 accepted order 27
+Order 27 is on the way
+Order 27 delivered by Drone 1
+Drone 1 accepted order 28
+Rating 3 saved for order 27
+Order 28 is on the way
+Order 28 delivered by Drone 1
+Rating 3 saved for order 28
+Order 29 created for user 22 in district Al Rawdah
+Drone 1 accepted order 29
+Order 30 created for user 11 in district Al Rawdah
+Order 29 is on the way
+Order 29 delivered by Drone 1
+Drone 1 accepted order 30
+Rating 3 saved for order 29
+Order 30 is on the way
+Order 30 delivered by Drone 1
+Rating 5 saved for order 30
+Order 31 created for user 22 in district Al Rawdah
+Order 32 created for user 11 in district Al Rawdah
+Drone 1 accepted order 31
+Order 31 is on the way
+Order 31 delivered by Drone 1
+Drone 1 accepted order 32
+Order 32 is on the way
+Order 32 delivered by Drone 1
+Drone 3 thread started.
+Drone 2 thread started.
+Drone 1 thread started.
+Login success for user phone: 11
+Login success for user phone: 22
+Order 33 created for user 11 in district Al Rawdah
+Order 34 created for user 22 in district Al Rawdah
+Drone 1 accepted order 33
+Order 33 is on the way
+Order 33 delivered by Drone 1
+Drone 1 accepted order 34
+Order 34 is on the way
+Order 34 delivered by Drone 1
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Report saved to report.txt
+Drone 3 thread started.
+Drone 2 thread started.
+Drone 1 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Report saved to report.txt
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Drone 2 thread started.
+Drone 3 thread started.
+Drone 2 thread started.
+Drone 3 thread started.
+Drone 1 thread started.
+Login success for user phone: 11
+Login success for user phone: 22
+Order 35 created for user 11 in district Al Rawdah
+Drone 1 accepted order 35
+Order 36 created for user 22 in district Al Rawdah
+Order 35 is on the air
+Order 35 delivered by Drone 1
+Drone 1 accepted order 36
+Rating 3 saved for order 35
+Order 36 is on the air
+Order 36 delivered by Drone 1

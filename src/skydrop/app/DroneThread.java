@@ -140,15 +140,15 @@ public class DroneThread extends Thread {
         // Simulate preparing the delivery
         Thread.sleep(10000);
 
-        // Update order status to on the way
-        databaseController.updateOrderStatus(orderId, "On the way");
+        // Update order status to on the air
+        databaseController.updateOrderStatus(orderId, "On the air");
 
         fileController.writeLog(
-                "Order " + orderId + " is on the way"
+                "Order " + orderId + " is on the air"
         );
 
         if (order != null) {
-            order.updateStatus("On the way");
+            order.updateStatus("On the air");
         }
 
         // Simulate delivery time

@@ -490,7 +490,7 @@ public class DatabaseController {
         String sql = """
             SELECT COUNT(*)
             FROM orders
-            WHERE status IN ('Accepted', 'On the way', 'Delivered')
+            WHERE status IN ('Accepted', 'On the air', 'Delivered')
             """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);

@@ -95,8 +95,8 @@ public class OrderStatusScreen extends JFrame {
                     setStatus("Accepted", "#18A85B", "Preparing your order...");
                     break;
 
-                case "On the way":
-                    setStatus("On the way", "#D38B00", "Drone is on the way...");
+                case "On the air":
+                    setStatus("On the air", "#D38B00", "Drone is on the air...");
                     break;
 
                 case "Delivered":
