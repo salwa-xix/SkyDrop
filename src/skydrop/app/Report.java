@@ -84,7 +84,6 @@ public class Report {
             text.append("Drone ").append(drone.getDroneId())
                     .append(" | District: ").append(drone.getDistrict())
                     .append(" | Delivered: ").append(drone.getDeliveredCount())
-                    .append(" | Queue: ").append(drone.getQueueCount())
                     .append("\n");
         }
 
