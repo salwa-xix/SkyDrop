@@ -60,4 +60,9 @@ public class BaseScreen extends JPanel {
 
         return new ImageIcon(url).getImage();
     }
+
+    // Add logo again when screen components are refreshed
+    public void addLogo() {
+        add(createLogoLabel(150, 18));
+    }
 }

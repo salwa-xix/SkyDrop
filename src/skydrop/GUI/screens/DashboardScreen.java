@@ -46,6 +46,8 @@ public class DashboardScreen extends JFrame {
         // Clear old cards before drawing updated data
         root.removeAll();
 
+        root.addLogo();
+
         JLabel title = createLabel("Drone Dashboard", 0, 175, W, 28,
                 new Font("SansSerif", Font.BOLD, 18),
                 Color.WHITE,
