@@ -43,7 +43,7 @@ public class SignUpScreen extends JFrame {
         String[] jeddahDistricts = {
                 "Your District",
                 "Al Rawdah",
-                "Al Safa",
+                "Al Naeem",
                 "Al Hamra",
                 "Al Salamah",
                 "Al Rehab"

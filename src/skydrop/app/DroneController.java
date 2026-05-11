@@ -4,56 +4,66 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Manages runtime drone objects and saves drone state changes.
- */
+// Manage runtime drone objects and save their updated state
 public class DroneController {
 
     private final List<Drone> drones;
     private final DatabaseController db;
 
     public DroneController(DatabaseController databaseController) {
+
         this.db = databaseController;
+
+        // Load all drones from the database when the server starts
         this.drones = Collections.synchronizedList(databaseController.loadDrones());
     }
 
-    /**
-     * Returns the drones used by DroneThreadManager at startup.
-     */
+    // Return all runtime drone objects
     public synchronized ArrayList<Drone> getAllDrones() {
+
         return new ArrayList<>(drones);
     }
 
-    /**
-     * Assigns an order through the Drone model, then saves it.
-     */
+    // Assign an order to a drone and save the updated state
     public synchronized boolean assignOrderToDrone(Drone drone, int orderId) {
+
+        // Update the drone object first
         drone.assignOrder(orderId);
+
+        // Save the updated drone state in the database
         return db.updateDrone(drone);
     }
 
-    /**
-     * Releases a drone through the model, then saves it.
-     */
+    // Release the drone after delivery and save the changes
     public synchronized boolean releaseDrone(Drone drone) {
+
+        // Mark the drone as available again
         drone.releaseOrder();
+
+        // Save the updated state in the database
         return db.updateDrone(drone);
     }
 
-    /**
-     * Increments the delivered count through the model, then saves it.
-     */
+    // Increase the delivery count and save the updated drone state
     public synchronized boolean incrementDeliveredCount(Drone drone) {
+
+        // Update the runtime object first
         drone.incrementDeliveredCount();
+
+        // Save the updated delivery count in the database
         return db.updateDrone(drone);
     }
 
-    /**
-     * Refreshes the queue count in the runtime object and database.
-     */
+    // Refresh the queue count for the drone district
     public synchronized void refreshQueueCount(Drone drone) {
+
+        // Get the latest waiting order count from the database
         int count = db.getWaitingQueueCount(drone.getDistrict());
+
+        // Update the runtime drone object
         drone.updateQueueCount(count);
+
+        // Save the updated queue count in the database
         db.updateDrone(drone);
     }
 }

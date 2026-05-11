@@ -12,22 +12,29 @@ public class CreateDataBase {
     private static final String USER = "root";
     private static final String PASSWORD = "123321";
 
+    // Create the database and all required tables for the system
     public static void createTables() {
 
+        // Connect to MySQL server first to create the database
         try (Connection connection = DriverManager.getConnection(SERVER_URL, USER, PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate("CREATE DATABASE IF NOT EXISTS skydrop");
+
             System.out.println("Database created successfully.");
 
         } catch (SQLException e) {
+
             System.out.println("Error creating database: " + e.getMessage());
+
             return;
         }
 
+        // Connect to the SkyDrop database to create the tables
         try (Connection connection = DriverManager.getConnection(DB_URL, USER, PASSWORD);
              Statement statement = connection.createStatement()) {
 
+            // Store user account information
             String createUsersTable = """
                 CREATE TABLE IF NOT EXISTS users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,6 +45,7 @@ public class CreateDataBase {
                 )
                 """;
 
+            // Store delivery orders created by users
             String createOrdersTable = """
                 CREATE TABLE IF NOT EXISTS orders (
                     order_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,6 +61,7 @@ public class CreateDataBase {
                 )
                 """;
 
+            // Store drone status and delivery statistics
             String createDronesTable = """
                 CREATE TABLE IF NOT EXISTS drones (
                     drone_id INT PRIMARY KEY,
@@ -64,6 +73,7 @@ public class CreateDataBase {
                 )
                 """;
 
+            // Create all tables if they do not already exist
             statement.executeUpdate(createUsersTable);
             statement.executeUpdate(createOrdersTable);
             statement.executeUpdate(createDronesTable);
@@ -71,6 +81,7 @@ public class CreateDataBase {
             System.out.println("Tables created successfully.");
 
         } catch (SQLException e) {
+
             System.out.println("Error creating tables: " + e.getMessage());
         }
     }

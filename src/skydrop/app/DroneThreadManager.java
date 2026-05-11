@@ -2,23 +2,22 @@ package skydrop.app;
 
 import java.util.ArrayList;
 
-/**
- * Starts and stops the worker threads that simulate drone delivery.
- */
+// Manage all drone worker threads in the system
 public class DroneThreadManager {
 
     private final ArrayList<DroneThread> droneThreads = new ArrayList<>();
 
-    /**
-     * Creates and starts one thread for each drone.
-     */
+    // Create and start one thread for each drone
     public void startDroneThreads(ArrayList<Drone> drones,
                                   DroneController droneController,
                                   OrderController orderController,
                                   DatabaseController databaseController,
                                   WeatherController weatherController,
                                   FileController fileController) {
+
         for (Drone drone : drones) {
+
+            // Create a delivery thread for this drone
             DroneThread thread = new DroneThread(
                     drone,
                     droneController,
@@ -28,16 +27,19 @@ public class DroneThreadManager {
                     fileController
             );
 
+            // Store the thread so it can be stopped later
             droneThreads.add(thread);
+
+            // Start the delivery simulation
             thread.start();
         }
     }
 
-    /**
-     * Requests all running drone threads to stop.
-     */
+    // Stop all running drone threads safely
     public void stopAllThreads() {
+
         for (DroneThread thread : droneThreads) {
+
             thread.stopDrone();
         }
     }

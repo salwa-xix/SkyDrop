@@ -4,86 +4,109 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Coordinates order actions between the application logic and the database.
- *
- * The controller uses Order model methods first, then asks DatabaseController
- * to save the updated object. This keeps business changes inside the model and
- * persistence inside the database layer.
- */
+// Manage order operations between the application and the database
 public class OrderController {
 
     private final List<Order> orders;
     private final DatabaseController db;
 
     public OrderController(DatabaseController db) {
+
+        // Store runtime order objects used by active threads
         this.orders = Collections.synchronizedList(new ArrayList<>());
+
         this.db = db;
     }
 
-    /**
-     * Creates a new order, saves it, and keeps a runtime copy for active threads.
-     */
+    // Create a new order and save it in the database
     public synchronized Order createOrder(String userPhone, String placeType, String placeName,
                                           String itemName, String district) {
-        Order order = new Order(0, userPhone, placeType, placeName, itemName, district);
 
+        // Create the runtime order object
+        Order order = new Order(
+                0,
+                userPhone,
+                placeType,
+                placeName,
+                itemName,
+                district
+        );
+
+        // Save the order and keep a runtime copy for active threads
         if (db.insertOrder(order)) {
+
             orders.add(order);
         }
 
         return order;
     }
 
-    /**
-     * Finds an order from memory first, then falls back to the database.
-     */
+    // Find an order from memory first, then check the database if needed
     public synchronized Order findOrderById(int orderId) {
+
         for (Order order : orders) {
+
             if (order.getOrderId() == orderId) {
+
                 return order;
             }
         }
 
+        // Load the order from the database if it is not in memory
         return db.findOrderById(orderId);
     }
 
-    /**
-     * Updates an order status through the model, then saves it.
-     */
+    // Update the order status and save the changes
     public synchronized boolean updateOrderStatus(int orderId, String status) {
+
+        // Find the order object before updating it
         Order order = findOrderById(orderId);
+
         if (order == null) {
+
             return false;
         }
 
+        // Update the runtime object first
         order.updateStatus(status);
+
+        // Save the updated state in the database
         return db.updateOrder(order);
     }
 
-    /**
-     * Assigns a drone to an order through the model, then saves it.
-     */
+    // Assign a drone to the order and save the changes
     public synchronized boolean assignDroneToOrder(int orderId, int droneId) {
+
+        // Find the order object before assigning the drone
         Order order = findOrderById(orderId);
+
         if (order == null) {
+
             return false;
         }
 
+        // Update the runtime order object
         order.assignDrone(droneId);
+
+        // Save the updated order in the database
         return db.updateOrder(order);
     }
 
-    /**
-     * Saves a user rating through the Order model.
-     */
+    // Save the user rating after delivery
     public synchronized boolean saveRating(int orderId, int rating) {
+
+        // Find the order before saving the rating
         Order order = findOrderById(orderId);
+
         if (order == null) {
+
             return false;
         }
 
+        // Update the rating inside the order object
         order.addRating(rating);
+
+        // Save the updated order in the database
         return db.updateOrder(order);
     }
 }

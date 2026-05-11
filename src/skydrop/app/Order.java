@@ -1,12 +1,6 @@
 package skydrop.app;
 
-/**
- * Represents one delivery order in the SkyDrop system.
- *
- * The model owns the order state changes, such as assigning a drone,
- * changing delivery status, and saving a rating. DatabaseController is
- * responsible only for saving the final state to the database.
- */
+// Represents one delivery order in the system
 public class Order {
 
     public static final String STATUS_WAITING = "Waiting";
@@ -34,6 +28,8 @@ public class Order {
         this.placeName = placeName;
         this.itemName = itemName;
         this.district = district;
+
+        // New orders start as waiting with no rating or assigned drone
         this.status = STATUS_WAITING;
         this.rating = 0;
         this.assignedDroneId = null;
@@ -79,42 +75,45 @@ public class Order {
         return assignedDroneId;
     }
 
-    /**
-     * Changes the delivery status using the model instead of updating raw
-     * database fields directly from other classes.
-     */
+    // Update the current delivery status of the order
     public void updateStatus(String status) {
+
+        // Make sure the status is not empty
         if (status == null || status.trim().isEmpty()) {
+
             throw new IllegalArgumentException("Order status cannot be empty.");
         }
+
         this.status = status;
     }
 
-    /**
-     * Stores the drone that handled this order. The value is kept even after
-     * delivery so the system can still know which drone delivered the order.
-     */
+    // Store the drone assigned to this order
     public void assignDrone(int droneId) {
+
+        // Drone ID must be a valid positive number
         if (droneId <= 0) {
+
             throw new IllegalArgumentException("Drone ID must be positive.");
         }
+
         this.assignedDroneId = droneId;
     }
 
-    /**
-     * Saves the user's rating after delivery.
-     */
+    // Save the user rating after delivery
     public void addRating(int rating) {
+
+        // Ratings must be between 1 and 5
         if (rating < 1 || rating > 5) {
+
             throw new IllegalArgumentException("Rating must be between 1 and 5.");
         }
+
         this.rating = rating;
     }
 
-    /**
-     * Used only when loading an existing order from the database.
-     */
+    // Restore saved order data loaded from the database
     public void loadSavedState(String status, int rating, Integer assignedDroneId) {
+
         this.status = status;
         this.rating = rating;
         this.assignedDroneId = assignedDroneId;
