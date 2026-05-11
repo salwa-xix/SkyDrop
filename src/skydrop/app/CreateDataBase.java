@@ -12,7 +12,6 @@ public class CreateDataBase {
     private static final String USER = "root";
     private static final String PASSWORD = "123321";
 
-    // Create the database and all required tables for the system
     public static void createTables() {
 
         // Connect to MySQL server first to create the database

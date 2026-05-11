@@ -17,16 +17,11 @@ public class SkyDropClient {
                 Socket socket = new Socket(HOST, PORT);
 
                 // Send text requests to the server
-                PrintWriter out = new PrintWriter(
-                        socket.getOutputStream(),
-                        true
-                );
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
                 // Read the server response
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream())
-                )
-        ) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+        {
 
             // Send the request using the shared protocol format
             out.println(request);

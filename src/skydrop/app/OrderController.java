@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// Manage order operations between the application and the database
 public class OrderController {
 
     private final List<Order> orders;
@@ -12,9 +11,7 @@ public class OrderController {
 
     public OrderController(DatabaseController db) {
 
-        // Store runtime order objects used by active threads
-        this.orders = Collections.synchronizedList(new ArrayList<>());
-
+        this.orders = new ArrayList<>();
         this.db = db;
     }
 

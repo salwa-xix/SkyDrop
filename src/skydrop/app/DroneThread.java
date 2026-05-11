@@ -1,6 +1,5 @@
 package skydrop.app;
 
-// Run the delivery simulation for one drone
 public class DroneThread extends Thread {
 
     private static final int CHECK_INTERVAL_MS = 1000;
@@ -97,7 +96,6 @@ public class DroneThread extends Thread {
 
         // Assign the drone to the order and mark the order as accepted
         orderController.assignDroneToOrder(orderId, drone.getDroneId());
-
         orderController.updateOrderStatus(orderId, Order.STATUS_ACCEPTED);
 
         // Mark the drone as busy with this order

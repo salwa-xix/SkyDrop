@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// Manage runtime drone objects and save their updated state
 public class DroneController {
 
     private final List<Drone> drones;
@@ -15,7 +14,7 @@ public class DroneController {
         this.db = databaseController;
 
         // Load all drones from the database when the server starts
-        this.drones = Collections.synchronizedList(databaseController.loadDrones());
+        this.drones = databaseController.loadDrones();
     }
 
     // Return all runtime drone objects

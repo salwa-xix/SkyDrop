@@ -236,8 +236,7 @@ public class ClientHandler extends Thread {
             Drone d = drones.get(i);
 
             // Show "None" if the drone does not have an active order
-            String currentOrder = d.getCurrentOrderId() == null
-                    ? "None"
+            String currentOrder = d.getCurrentOrderId() == null ? "None"
                     : String.valueOf(d.getCurrentOrderId());
 
             response.append(d.getDroneId())

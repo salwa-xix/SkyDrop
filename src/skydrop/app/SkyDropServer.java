@@ -15,7 +15,6 @@ public class SkyDropServer {
 
         // Create and connect the main database controller
         DatabaseController db = new DatabaseController();
-
         db.connect();
 
         // Insert demo drones when the server starts
@@ -28,8 +27,7 @@ public class SkyDropServer {
 
         FileController fileController = new FileController();
 
-        WeatherController weatherController =
-                new WeatherController();
+        WeatherController weatherController = new WeatherController();
 
         // Manage all drone delivery threads
         DroneThreadManager droneThreadManager = new DroneThreadManager();
