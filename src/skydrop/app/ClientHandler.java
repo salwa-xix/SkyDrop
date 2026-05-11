@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
-// Handle one client connection and process requests from the GUI
 public class ClientHandler extends Thread {
 
     private final Socket socket;
@@ -85,6 +84,22 @@ public class ClientHandler extends Thread {
         String phone = parts[1];
         String password = parts[2];
 
+        // Validate phone number format
+        if (!isValidPhone(phone)) {
+
+            out.println("ERROR|Phone number must contain exactly 10 digits");
+
+            return;
+        }
+
+        // Validate password length
+        if (!isValidPassword(password)) {
+
+            out.println("ERROR|Password must contain at least 8 characters");
+
+            return;
+        }
+
         // Find the user using the phone number
         User user = db.findUserByPhone(phone);
 
@@ -113,6 +128,30 @@ public class ClientHandler extends Thread {
         String phone = parts[2];
         String password = parts[3];
         String district = parts[4];
+
+        // Validate user name
+        if (!isValidName(name)) {
+
+            out.println("ERROR|Invalid name");
+
+            return;
+        }
+
+        // Validate phone number format
+        if (!isValidPhone(phone)) {
+
+            out.println("ERROR|Phone number must contain exactly 10 digits");
+
+            return;
+        }
+
+        // Validate password length
+        if (!isValidPassword(password)) {
+
+            out.println("ERROR|Password must contain at least 8 characters");
+
+            return;
+        }
 
         // Check if the user already exists
         if (db.userExists(phone)) {
@@ -314,5 +353,27 @@ public class ClientHandler extends Thread {
 
             return null;
         }
+    }
+
+    // Make sure the phone number contains exactly 10 digits
+    private boolean isValidPhone(String phone) {
+
+        return phone != null && phone.matches("\\d{10}");
+    }
+
+    // Make sure the password contains at least 8 characters
+    private boolean isValidPassword(String password) {
+
+        return password != null && password.length() >= 8;
+    }
+
+    // Make sure the name is not one character and not numbers only
+    private boolean isValidName(String name) {
+
+        if (name == null || name.trim().length() < 2) {
+            return false;
+        }
+
+        return !name.matches("\\d+");
     }
 }

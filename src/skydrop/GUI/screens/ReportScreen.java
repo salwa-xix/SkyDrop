@@ -87,12 +87,6 @@ public class ReportScreen extends JFrame {
             return;
         }
 
-        /*
-         Expected format:
-         REPORT|totalOrders|acceptedOrders|rejectedOrders|deliveredOrders|droneData
-
-         We will ignore deliveredOrders in parts[4].
-        */
         String[] parts = response.split("\\|", -1);
 
         if (parts.length < 6) {

@@ -179,10 +179,6 @@ public class OrderTestScreen extends JFrame {
                 return;
             }
 
-            /*
-             Expected request format:
-             CREATE_ORDER|phone|type|place|item|district
-            */
             String request =
                     "CREATE_ORDER|" +
                             currentUser.getPhone() + "|" +
@@ -202,10 +198,6 @@ public class OrderTestScreen extends JFrame {
                 return;
             }
 
-            /*
-             Expected success response:
-             ORDER_CREATED|orderId
-            */
             if (response.startsWith("ORDER_CREATED|")) {
 
                 String[] parts = response.split("\\|", -1);

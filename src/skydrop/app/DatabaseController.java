@@ -3,7 +3,6 @@ package skydrop.app;
 import java.sql.*;
 import java.util.ArrayList;
 
-// Handle all database operations for the SkyDrop system
 public class DatabaseController {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/skydrop";
@@ -27,16 +26,10 @@ public class DatabaseController {
         }
     }
 
-    // Check if the database connection is still active
-    private boolean isConnected() throws SQLException {
-
-        return connection != null && !connection.isClosed();
-    }
-
-    // Make sure the database is connected before running queries
+    // Make sure the database connection is active before running queries
     private void ensureConnected() throws SQLException {
 
-        if (!isConnected()) {
+        if (connection == null || connection.isClosed()) {
             throw new SQLException("Database is not connected.");
         }
     }

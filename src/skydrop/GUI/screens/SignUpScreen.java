@@ -45,8 +45,6 @@ public class SignUpScreen extends JFrame {
                 "Al Rawdah",
                 "Al Naeem",
                 "Al Hamra",
-                "Al Salamah",
-                "Al Rehab"
         };
 
         RoundedComboBox districtBox = new RoundedComboBox(jeddahDistricts, 18);

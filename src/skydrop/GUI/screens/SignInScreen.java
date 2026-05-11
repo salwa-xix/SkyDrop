@@ -153,10 +153,6 @@ public class SignInScreen extends JFrame {
                 return;
             }
 
-            /*
-             Expected success format:
-             SUCCESS|name|phone|district
-            */
             if (response.startsWith("SUCCESS|")) {
 
                 String[] parts = response.split("\\|", -1);

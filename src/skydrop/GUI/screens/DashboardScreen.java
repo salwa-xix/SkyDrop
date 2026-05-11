@@ -74,10 +74,6 @@ public class DashboardScreen extends JFrame {
             return;
         }
 
-        /*
-         Expected format:
-         DRONES|droneId,district,status,currentOrder,queue;droneId,district,status,currentOrder,queue
-        */
         if (!response.startsWith("DRONES|")) {
             showMessage("Invalid server response.");
             return;
