@@ -1,18 +1,17 @@
-package skydrop.app;
-
-import javax.swing.SwingUtilities;
-
 import skydrop.GUI.screens.DashboardScreen;
 import skydrop.GUI.screens.SplashScreen;
 
-public class Main {
+import javax.swing.*;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new SplashScreen();
-            new SplashScreen();
-            new SplashScreen();
-            new DashboardScreen();
-        });
-    }
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(() -> {
+
+        // Simulate multiple users for thread testing
+        new SplashScreen();
+        new SplashScreen();
+        new SplashScreen();
+
+        // Open employee dashboard
+        new DashboardScreen();
+    });
 }

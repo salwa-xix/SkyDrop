@@ -1,6 +1,16 @@
 package skydrop.app;
 
+/**
+ * Represents one delivery drone.
+ *
+ * The model owns runtime state changes such as assigning an order, becoming
+ * idle, and increasing the delivery count. The database layer saves the state
+ * after these methods are called.
+ */
 public class Drone {
+
+    public static final String STATUS_IDLE = "Idle";
+    public static final String STATUS_BUSY = "Busy";
 
     private int droneId;
     private String district;
@@ -10,10 +20,9 @@ public class Drone {
     private int queueCount;
 
     public Drone(int droneId, String district) {
-
         this.droneId = droneId;
         this.district = district;
-        this.status = "Idle";
+        this.status = STATUS_IDLE;
         this.currentOrderId = null;
         this.deliveredCount = 0;
         this.queueCount = 0;
@@ -43,47 +52,57 @@ public class Drone {
         return queueCount;
     }
 
-    // Update the current drone status
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    // Set the current assigned order ID
-    public void setCurrentOrderId(Integer currentOrderId) {
-        this.currentOrderId = currentOrderId;
-    }
-
-    // Update delivered orders count manually if needed
-    public void setDeliveredCount(int deliveredCount) {
-        this.deliveredCount = deliveredCount;
-    }
-
-    // Check if the drone is free to accept a new order
+    /**
+     * Returns true when the drone can accept another order.
+     */
     public boolean isAvailable() {
-        return status.equalsIgnoreCase("Idle");
+        return STATUS_IDLE.equalsIgnoreCase(status);
     }
 
-    // Assign a new order to this drone
+    /**
+     * Assigns a new order and marks the drone as busy.
+     */
     public void assignOrder(int orderId) {
-
+        if (orderId <= 0) {
+            throw new IllegalArgumentException("Order ID must be positive.");
+        }
         this.currentOrderId = orderId;
-        this.status = "Busy";
+        this.status = STATUS_BUSY;
     }
 
-    // Release the current order after delivery is completed
+    /**
+     * Releases the current order and marks the drone as idle.
+     */
     public void releaseOrder() {
-
         this.currentOrderId = null;
-        this.status = "Idle";
+        this.status = STATUS_IDLE;
     }
 
-    // Increase the successful delivery count
+    /**
+     * Increases the successful delivery count in the runtime object.
+     */
     public void incrementDeliveredCount() {
         this.deliveredCount++;
     }
 
-    // Update the number of waiting orders for this drone
-    public void setQueueCount(int queueCount) {
+    /**
+     * Updates the number of waiting orders in this drone's district.
+     */
+    public void updateQueueCount(int queueCount) {
+        if (queueCount < 0) {
+            throw new IllegalArgumentException("Queue count cannot be negative.");
+        }
+        this.queueCount = queueCount;
+    }
+
+    /**
+     * Used only when loading an existing drone from the database.
+     */
+    public void loadSavedState(String status, Integer currentOrderId,
+                               int deliveredCount, int queueCount) {
+        this.status = status;
+        this.currentOrderId = currentOrderId;
+        this.deliveredCount = deliveredCount;
         this.queueCount = queueCount;
     }
 }

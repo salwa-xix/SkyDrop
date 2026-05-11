@@ -49,7 +49,6 @@ public class CreateDataBase {
                     status VARCHAR(50) NOT NULL,
                     rating INT DEFAULT 0,
                     assigned_drone_id INT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_phone) REFERENCES users(phone)
                 )
                 """;

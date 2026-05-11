@@ -3,88 +3,107 @@ package skydrop.app;
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Handles all direct database access for SkyDrop.
+ *
+ * This class should not own business decisions. Other backend classes update
+ * the model objects first, then call this class to save or read data.
+ */
 public class DatabaseController {
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/skydrop";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "123321";
 
     private Connection connection;
 
-    // Connect to the SkyDrop database
+    /**
+     * Opens one shared connection to the SkyDrop database.
+     */
     public void connect() {
-
         try {
-            connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/skydrop",
-                    "root",
-                    "123321"
-            );
-
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             System.out.println("Database connected successfully.");
-
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
         }
     }
 
-    // Insert a new user into the database
-    public void insertUser(User user) {
+    private boolean isConnected() throws SQLException {
+        return connection != null && !connection.isClosed();
+    }
 
+    private void ensureConnected() throws SQLException {
+        if (!isConnected()) {
+            throw new SQLException("Database is not connected.");
+        }
+    }
+
+    /**
+     * Inserts a new user account.
+     */
+    public synchronized boolean insertUser(User user) {
         String sql = """
             INSERT INTO users(name, phone, password, district)
             VALUES (?, ?, ?, ?)
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getPhone());
-            stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getDistrict());
-
-            stmt.executeUpdate();
-
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, user.getName());
+                stmt.setString(2, user.getPhone());
+                stmt.setString(3, user.getPassword());
+                stmt.setString(4, user.getDistrict());
+                return stmt.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             System.out.println("Error inserting user: " + e.getMessage());
+            return false;
         }
     }
 
-    // Check if a user already exists using the phone number
-    public boolean userExists(String phone) {
-
+    /**
+     * Checks whether a phone number already belongs to a registered user.
+     */
+    public synchronized boolean userExists(String phone) {
         String sql = "SELECT 1 FROM users WHERE phone = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, phone);
-
-            ResultSet rs = stmt.executeQuery();
-
-            return rs.next();
-
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, phone);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    return rs.next();
+                }
+            }
         } catch (SQLException e) {
             System.out.println("Error checking user: " + e.getMessage());
             return false;
         }
     }
 
-    // Find a user by phone number
-    public User findUserByPhone(String phone) {
+    /**
+     * Loads a user by phone number.
+     */
+    public synchronized User findUserByPhone(String phone) {
+        String sql = "SELECT name, phone, password, district FROM users WHERE phone = ?";
 
-        String sql = "SELECT * FROM users WHERE phone = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, phone);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new User(
-                        rs.getString("name"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getString("district")
-                );
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, phone);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return new User(
+                                rs.getString("name"),
+                                rs.getString("phone"),
+                                rs.getString("password"),
+                                rs.getString("district")
+                        );
+                    }
+                }
             }
-
         } catch (SQLException e) {
             System.out.println("Error finding user: " + e.getMessage());
         }
@@ -92,72 +111,145 @@ public class DatabaseController {
         return null;
     }
 
-    // Insert a new order and save the generated order ID in the Order object
-    public void insertOrder(Order order) {
-
+    /**
+     * Inserts a new order and stores the generated ID inside the object.
+     */
+    public synchronized boolean insertOrder(Order order) {
         String sql = """
             INSERT INTO orders
             (user_phone, place_type, place_name, item_name, district, status, rating, assigned_drone_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(
-                sql,
-                Statement.RETURN_GENERATED_KEYS
-        )) {
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                fillOrderStatement(stmt, order);
+                int affectedRows = stmt.executeUpdate();
 
-            stmt.setString(1, order.getUserPhone());
-            stmt.setString(2, order.getPlaceType());
-            stmt.setString(3, order.getPlaceName());
-            stmt.setString(4, order.getItemName());
-            stmt.setString(5, order.getDistrict());
-            stmt.setString(6, order.getStatus());
-            stmt.setInt(7, order.getRating());
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        order.setOrderId(rs.getInt(1));
+                    }
+                }
 
-            if (order.getAssignedDroneId() == null) {
-                stmt.setNull(8, Types.INTEGER);
-            } else {
-                stmt.setInt(8, order.getAssignedDroneId());
+                updateQueueCountForDistrict(order.getDistrict());
+                return affectedRows > 0;
             }
-
-            stmt.executeUpdate();
-
-            // Get the auto-generated order ID from MySQL
-            ResultSet rs = stmt.getGeneratedKeys();
-
-            if (rs.next()) {
-                order.setOrderId(rs.getInt(1));
-            }
-
-            // Update the queue count after adding a new waiting order
-            updateQueueCountForDistrict(order.getDistrict());
-
         } catch (SQLException e) {
             System.out.println("Error inserting order: " + e.getMessage());
+            return false;
         }
     }
 
-    // Get the next waiting order ID for a specific district
-    public synchronized Integer getNextWaitingOrderId(String district) {
 
+    // Saves the current state of an existing Order object.
+
+    public synchronized boolean updateOrder(Order order) {
+        String sql = """
+            UPDATE orders
+            SET user_phone = ?, place_type = ?, place_name = ?, item_name = ?,
+                district = ?, status = ?, rating = ?, assigned_drone_id = ?
+            WHERE order_id = ?
+            """;
+
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                fillOrderStatement(stmt, order);
+                stmt.setInt(9, order.getOrderId());
+                boolean updated = stmt.executeUpdate() > 0;
+                updateQueueCountForDistrict(order.getDistrict());
+                return updated;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating order: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void fillOrderStatement(PreparedStatement stmt, Order order) throws SQLException {
+        stmt.setString(1, order.getUserPhone());
+        stmt.setString(2, order.getPlaceType());
+        stmt.setString(3, order.getPlaceName());
+        stmt.setString(4, order.getItemName());
+        stmt.setString(5, order.getDistrict());
+        stmt.setString(6, order.getStatus());
+        stmt.setInt(7, order.getRating());
+
+        if (order.getAssignedDroneId() == null) {
+            stmt.setNull(8, Types.INTEGER);
+        } else {
+            stmt.setInt(8, order.getAssignedDroneId());
+        }
+    }
+
+    /**
+     * Loads an order by ID and rebuilds its object state from the database.
+     */
+    public synchronized Order findOrderById(int orderId) {
+        String sql = """
+            SELECT order_id, user_phone, place_type, place_name, item_name,
+                   district, status, rating, assigned_drone_id
+            FROM orders
+            WHERE order_id = ?
+            """;
+
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, orderId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        Order order = new Order(
+                                rs.getInt("order_id"),
+                                rs.getString("user_phone"),
+                                rs.getString("place_type"),
+                                rs.getString("place_name"),
+                                rs.getString("item_name"),
+                                rs.getString("district")
+                        );
+
+                        Integer assignedDroneId = getNullableInteger(rs, "assigned_drone_id");
+                        order.loadSavedState(
+                                rs.getString("status"),
+                                rs.getInt("rating"),
+                                assignedDroneId
+                        );
+                        return order;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding order: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the oldest waiting order in a district.
+     */
+    public synchronized Integer getNextWaitingOrderId(String district) {
         String sql = """
             SELECT order_id
             FROM orders
-            WHERE district = ? AND status = 'Waiting'
+            WHERE district = ? AND status = ?
             ORDER BY order_id ASC
             LIMIT 1
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, district);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("order_id");
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, district);
+                stmt.setString(2, Order.STATUS_WAITING);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("order_id");
+                    }
+                }
             }
-
         } catch (SQLException e) {
             System.out.println("Error getting next waiting order: " + e.getMessage());
         }
@@ -165,273 +257,129 @@ public class DatabaseController {
         return null;
     }
 
-    // Assign an order to a drone in the orders table
-    public synchronized void assignOrderToDrone(int orderId, int droneId) {
-
-        String sql = """
-            UPDATE orders
-            SET assigned_drone_id = ?
-            WHERE order_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, droneId);
-            stmt.setInt(2, orderId);
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error assigning order to drone: " + e.getMessage());
-        }
+    /**
+     * Gets the latest order status from the database.
+     */
+    public synchronized String getOrderStatus(int orderId) {
+        Order order = findOrderById(orderId);
+        return order == null ? null : order.getStatus();
     }
 
-    // Update the current status of an order
-    public synchronized void updateOrderStatus(int orderId, String status) {
-
-        String sql = """
-            UPDATE orders
-            SET status = ?
-            WHERE order_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, status);
-            stmt.setInt(2, orderId);
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error updating order status: " + e.getMessage());
-        }
-    }
-
-    // Update the current status of a drone
-    public synchronized void updateDroneStatus(int droneId, String status) {
-
+    /**
+     * Saves the current state of an existing Drone object.
+     */
+    public synchronized boolean updateDrone(Drone drone) {
         String sql = """
             UPDATE drones
-            SET status = ?
+            SET district = ?, status = ?, current_order_id = ?, delivered_count = ?, queue_count = ?
             WHERE drone_id = ?
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, drone.getDistrict());
+                stmt.setString(2, drone.getStatus());
 
-            stmt.setString(1, status);
-            stmt.setInt(2, droneId);
+                if (drone.getCurrentOrderId() == null) {
+                    stmt.setNull(3, Types.INTEGER);
+                } else {
+                    stmt.setInt(3, drone.getCurrentOrderId());
+                }
 
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error updating drone status: " + e.getMessage());
-        }
-    }
-
-    // Update the current order assigned to a drone
-    public synchronized void updateDroneCurrentOrder(int droneId, Integer orderId) {
-
-        String sql = """
-            UPDATE drones
-            SET current_order_id = ?
-            WHERE drone_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            if (orderId == null) {
-                stmt.setNull(1, Types.INTEGER);
-            } else {
-                stmt.setInt(1, orderId);
+                stmt.setInt(4, drone.getDeliveredCount());
+                stmt.setInt(5, drone.getQueueCount());
+                stmt.setInt(6, drone.getDroneId());
+                return stmt.executeUpdate() > 0;
             }
-
-            stmt.setInt(2, droneId);
-
-            stmt.executeUpdate();
-
         } catch (SQLException e) {
-            System.out.println("Error updating drone current order: " + e.getMessage());
+            System.out.println("Error updating drone: " + e.getMessage());
+            return false;
         }
     }
 
-    // Mark the drone as busy and assign the current order to it
-    public void markDroneBusy(int droneId, int orderId) {
-
-        updateDroneStatus(droneId, "Busy");
-        updateDroneCurrentOrder(droneId, orderId);
-    }
-
-    // Mark the drone as idle after completing or rejecting an order
-    public void markDroneIdle(int droneId) {
-
-        updateDroneStatus(droneId, "Idle");
-        updateDroneCurrentOrder(droneId, null);
-    }
-
-    // Increase the delivered count for a specific drone
-    public synchronized void incrementDroneDeliveredCount(int droneId) {
-
-        String sql = """
-            UPDATE drones
-            SET delivered_count = delivered_count + 1
-            WHERE drone_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, droneId);
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error incrementing drone delivered count: " + e.getMessage());
-        }
-    }
-
-    // Update the queue count for the drone assigned to this district
+    /**
+     * Refreshes the saved waiting-order count for all drones in a district.
+     */
     public synchronized void updateQueueCountForDistrict(String district) {
-
         String sql = """
             UPDATE drones
             SET queue_count = (
                 SELECT COUNT(*)
                 FROM orders
-                WHERE district = ? AND status = 'Waiting'
+                WHERE district = ? AND status = ?
             )
             WHERE district = ?
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, district);
-            stmt.setString(2, district);
-
-            stmt.executeUpdate();
-
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, district);
+                stmt.setString(2, Order.STATUS_WAITING);
+                stmt.setString(3, district);
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             System.out.println("Error updating queue count: " + e.getMessage());
         }
     }
 
-    // Get the latest order status from the database
-    public String getOrderStatus(int orderId) {
-
-        String sql = """
-            SELECT status
-            FROM orders
-            WHERE order_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, orderId);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getString("status");
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error getting order status: " + e.getMessage());
-        }
-
-        return null;
-    }
-
-    // Save a rating for a delivered order
-    public void saveRating(int orderId, int rating) {
-
-        String sql = """
-            UPDATE orders
-            SET rating = ?
-            WHERE order_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, rating);
-            stmt.setInt(2, orderId);
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error saving rating: " + e.getMessage());
-        }
-    }
-
-    // Insert the fixed drones once at system startup
-    public void insertInitialDrones() {
-
+    /**
+     * Inserts the fixed demo drones once at startup.
+     */
+    public synchronized void insertInitialDrones() {
         insertDroneIfNotExists(new Drone(1, "Al Rawdah"));
         insertDroneIfNotExists(new Drone(2, "Al Hamra"));
         insertDroneIfNotExists(new Drone(3, "Al Naeem"));
     }
 
-    // Insert a drone only if it does not already exist
     private void insertDroneIfNotExists(Drone drone) {
-
         String sql = """
             INSERT IGNORE INTO drones
             (drone_id, district, status, current_order_id, delivered_count, queue_count)
             VALUES (?, ?, ?, ?, ?, ?)
             """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, drone.getDroneId());
-            stmt.setString(2, drone.getDistrict());
-            stmt.setString(3, drone.getStatus());
-
-            if (drone.getCurrentOrderId() == null) {
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, drone.getDroneId());
+                stmt.setString(2, drone.getDistrict());
+                stmt.setString(3, drone.getStatus());
                 stmt.setNull(4, Types.INTEGER);
-            } else {
-                stmt.setInt(4, drone.getCurrentOrderId());
+                stmt.setInt(5, drone.getDeliveredCount());
+                stmt.setInt(6, drone.getQueueCount());
+                stmt.executeUpdate();
             }
-
-            stmt.setInt(5, drone.getDeliveredCount());
-            stmt.setInt(6, drone.getQueueCount());
-
-            stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.out.println("Error inserting initial drone: " + e.getMessage());
         }
     }
 
-    // Load all drones from the database
-    public ArrayList<Drone> loadDrones() {
-
+    /**
+     * Loads all drones with their latest saved state.
+     */
+    public synchronized ArrayList<Drone> loadDrones() {
         ArrayList<Drone> drones = new ArrayList<>();
+        String sql = "SELECT drone_id, district, status, current_order_id, delivered_count, queue_count FROM drones";
 
-        String sql = "SELECT * FROM drones";
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-
-                Drone drone = new Drone(
-                        rs.getInt("drone_id"),
-                        rs.getString("district")
-                );
-
-                drone.setStatus(rs.getString("status"));
-
-                Object currentOrderId = rs.getObject("current_order_id");
-
-                if (currentOrderId == null) {
-                    drone.setCurrentOrderId(null);
-                } else {
-                    drone.setCurrentOrderId((Integer) currentOrderId);
+                while (rs.next()) {
+                    Drone drone = new Drone(rs.getInt("drone_id"), rs.getString("district"));
+                    drone.loadSavedState(
+                            rs.getString("status"),
+                            getNullableInteger(rs, "current_order_id"),
+                            rs.getInt("delivered_count"),
+                            rs.getInt("queue_count")
+                    );
+                    drones.add(drone);
                 }
-
-                drone.setDeliveredCount(rs.getInt("delivered_count"));
-                drone.setQueueCount(rs.getInt("queue_count"));
-
-                drones.add(drone);
             }
-
         } catch (SQLException e) {
             System.out.println("Error loading drones: " + e.getMessage());
         }
@@ -439,25 +387,23 @@ public class DatabaseController {
         return drones;
     }
 
-    // Count the waiting orders for a district
-    public int getWaitingQueueCount(String district) {
+    /**
+     * Counts waiting orders for a district.
+     */
+    public synchronized int getWaitingQueueCount(String district) {
+        String sql = "SELECT COUNT(*) FROM orders WHERE district = ? AND status = ?";
 
-        String sql = """
-            SELECT COUNT(*)
-            FROM orders
-            WHERE district = ? AND status = 'Waiting'
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, district);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, district);
+                stmt.setString(2, Order.STATUS_WAITING);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
             }
-
         } catch (SQLException e) {
             System.out.println("Error getting queue count: " + e.getMessage());
         }
@@ -465,95 +411,38 @@ public class DatabaseController {
         return 0;
     }
 
-    // Count all orders in the system
-    public int getTotalOrders() {
+    public synchronized int getTotalOrders() {
+        return getCount("SELECT COUNT(*) FROM orders");
+    }
 
-        String sql = "SELECT COUNT(*) FROM orders";
+    public synchronized int getAcceptedOrdersCount() {
+        return getCount("SELECT COUNT(*) FROM orders WHERE status IN ('Accepted', 'On the air', 'Delivered')");
+    }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+    public synchronized int getRejectedOrdersCount() {
+        return getCount("SELECT COUNT(*) FROM orders WHERE status = 'Rejected'");
+    }
 
-            if (rs.next()) {
-                return rs.getInt(1);
+    // Execute a COUNT query and return the total result
+    private int getCount(String sql) {
+        try {
+            ensureConnected();
+            try (PreparedStatement stmt = connection.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getting total orders: " + e.getMessage());
+            System.out.println("Error running count query: " + e.getMessage());
         }
 
         return 0;
     }
 
-    // Count all orders that were accepted or completed
-    public int getAcceptedOrdersCount() {
-
-        String sql = """
-            SELECT COUNT(*)
-            FROM orders
-            WHERE status IN ('Accepted', 'On the air', 'Delivered')
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error getting accepted orders: " + e.getMessage());
-        }
-
-        return 0;
+    // Returns null instead of 0 when the database value is actually NULL
+    private Integer getNullableInteger(ResultSet rs, String columnName) throws SQLException {
+        int value = rs.getInt(columnName);
+        return rs.wasNull() ? null : value;
     }
-
-    // Count all rejected orders
-    public int getRejectedOrdersCount() {
-
-        String sql = """
-            SELECT COUNT(*)
-            FROM orders
-            WHERE status = 'Rejected'
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error getting rejected orders: " + e.getMessage());
-        }
-
-        return 0;
-    }
-
-    // Get the delivered count for one drone
-    public int getDeliveredCountForDrone(int droneId) {
-
-        String sql = """
-            SELECT delivered_count
-            FROM drones
-            WHERE drone_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, droneId);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("delivered_count");
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error getting drone delivered count: " + e.getMessage());
-        }
-
-        return 0;
-    }
-
 }

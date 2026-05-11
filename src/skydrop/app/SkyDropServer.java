@@ -27,6 +27,7 @@ public class SkyDropServer {
 
         droneThreadManager.startDroneThreads(
                 droneController.getAllDrones(),
+                droneController,
                 orderController,
                 db,
                 weatherController,
